@@ -29,11 +29,12 @@ int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE+1];
 	int fd;
 	ssize_t buff_readed;
+	size_t i;
 	if(argc == 1) {
 		argc++;
 		*(argv + 1) = "-\0";
 	}
-	for(size_t i = 1; i < argc; i++) {
+	for(i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "-") == 0) {
 			fd = STDIN_FILENO;
 		} else {
