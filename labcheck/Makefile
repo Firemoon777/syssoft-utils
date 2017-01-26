@@ -1,8 +1,7 @@
 CC=gcc
 CFLAGS=-g -O3 -Wall -Werror -pedantic -std=c89
 LIBS=
-SRC=src/labcheck.c
-OBJ=$(SRC:src/%.c=build/%.o)
+SRC=src/labcheck.c src/lab4.c
 LIBRESTRSRC=src/librestriction/librestriction.c
 	
 all: librestriction.so labcheck
