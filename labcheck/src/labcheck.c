@@ -28,17 +28,21 @@ static int labcheck_start_test(long labnum, long labvar, const char* executable)
 }
 
 int main(int argc, char **argv) {
-	long labvar, labnum;
+	unsigned long labvar, labnum;
+	int result;
 	char *ptr = NULL;
 	if(argc != 4) {
 		labcheck_usage(argv[0]);
-		exit(-1);
+		return -1;
 	}
-	labnum = strtol(argv[1], &ptr, 10);
-	labvar = strtol(argv[2], &ptr, 10);
-	labcheck_start_test(labnum, labvar, argv[3]);
-	/*int result = system("LD_PRELOAD=./librestriction.so ./a.out");
-	printf("Result = %i\n", WEXITSTATUS(result));*/
-	return 0;
+	labnum = strtoul(argv[1], &ptr, 10);
+	labvar = strtoul(argv[2], &ptr, 10);
+	result = labcheck_start_test(labnum, labvar, argv[3]);
+	if(result == 0) {
+		printf("Well done!\n");
+	} else if(result > 0) {
+		printf("You should work harder!\n");
+	}
+	return result;
 }
 
