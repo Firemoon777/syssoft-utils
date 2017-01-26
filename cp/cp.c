@@ -10,40 +10,6 @@
 
 #define BUFFER_SIZE 80
 
-void err_print(char* prog, char* file, char* msg) {
-	size_t string_size = (strlen(prog) + strlen(file) + strlen(msg)) + 2;
-	char* result = (char*)malloc(string_size * sizeof(char));
-	if(result == NULL) {
-		exit(ENOMEM);
-	}
-	strcpy(result, prog);
-	strcat(result, ": ");
-	strcat(result, file);
-	strcat(result, msg);
-	write(STDERR_FILENO, result, string_size);
-	free(result);
-}
-
-void err_parse(int err, char* prog, char* file) {
-	switch(err) {
-		case ENOENT:
-			err_print(prog, file, " no such file\n");
-			break;
-			
-		case EACCES:
-			err_print(prog, file, " permission denied\n");
-			break;
-			
-		case EEXIST:
-			err_print(prog, file, " file already exists\n");
-			break;
-			
-		default:
-			err_print(prog, file, " unknown error\n");
-			break;
-	}
-}
-
 int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE+1];
 	int fd_in, fd_out;
