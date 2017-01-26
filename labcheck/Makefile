@@ -1,21 +1,21 @@
 CC=gcc
-CFLAGS=-g -O3 -Wall -Werror -pedantic -c -std=c89
-LIBS=-lfuse  `pkg-config fuse --libs`
-SRC=$(wildcard src/*.c) 
+CFLAGS=-g -O3 -Wall -Werror -pedantic -std=c89
+LIBS=
+SRC=src/labcheck.c
 OBJ=$(SRC:src/%.c=build/%.o)
-LIBRESTRSRC=$(wildcard src/librestriction/*.c)
+LIBRESTRSRC=src/librestriction/librestriction.c
 	
-all: librestriction.so
+all: librestriction.so labcheck
+	
+labcheck: dir 
+	$(CC) -o bin/$@ $(SRC) $(CFLAGS) $(LIBS)
 	
 librestriction.so: dir
 	$(CC) $(CFLAGS) -shared -fPIC $(LIBRESTRSRC) -o bin/$@
 	
-build/%.o: src/%.c
-	$(CC) $(CFLAGS) -o $@ $<
-	
 dir: 
-	mkdir -p build bin
+	mkdir -p bin
 	
 clean:
-	rm build/* bin/*
+	rm bin/*
 
