@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	if(result == 0) {
 		printf("Well done!\n");
 	} else if(result > 0) {
-		printf("You should work harder!\n");
+		fprintf(stderr, "Failed tests: %i\nYou should work harder!\n", result);
 	}
 	return result;
 }

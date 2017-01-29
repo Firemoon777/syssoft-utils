@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 
 #include "lab4.h"
 #include "labcheck.h"
 
-static void lab4_check_print_status(labcheck_error status, char* msg) {
+static void lab4_print_status(labcheck_error status, char* msg) {
 	switch(status) {
 		case LABCHECK_ERROR_OK:
 			fprintf(stderr, "[  OK  ] %s\n", msg);
@@ -30,22 +31,39 @@ static int lab4_cmp_files(const char* file1, const char* file2) {
 	return WEXITSTATUS(result) == 0 ? LABCHECK_ERROR_OK : LABCHECK_ERROR_FAIL;
 }
 
+static int lab4_make_cmd(char* cmd, const char* executable, 
+				const lab4_input_type input_type,  const char* input,
+				const lab4_output_type output_type, const char* output_file) {
+	switch(input_type) {
+		case LAB4_INPUT_FILE:
+			sprintf(cmd, LAB4_RESTRICTION_LIB" %s %s %c %s", executable, input, output_type * '>', output_file);
+			return 0;
+			
+		case LAB4_INPUT_PIPE:
+			sprintf(cmd, "%s | "LAB4_RESTRICTION_LIB" %s %c %s", input, executable, output_type * '>', output_file);
+			return 0;
+		
+		default:
+			return 1;
+	}
+}
+					
+
 static labcheck_error lab4_check_test(const char* executable, const char* original, 
-				const char* input_files, const int redirect_needed) {
+				const lab4_input_type input_type, const char* input_file, 
+				const lab4_output_type output_type) {
 	const char* out_file1 = "ex.out", 
 	           *out_file2 = "orig.out";
-	size_t len = strlen(executable) + strlen(input_files) + strlen(out_file2) + strlen(out_file2) + 25;
+	size_t len = strlen(executable) + strlen(input_file) + strlen(out_file2) + strlen(out_file2) + strlen(LAB4_RESTRICTION_LIB) + 25;
 	char* cmd = (char*)malloc(len * sizeof(char));
 	int result;
-	sprintf(cmd, "%s %s %c %s", executable, input_files, redirect_needed * '>', out_file1);
-	/*printf("cmd to execute: %s\n", cmd);*/
+	assert(lab4_make_cmd(cmd, executable, input_type, input_file, output_type, out_file1) == 0);
 	result = system(cmd);
 	if(result != 0) {
 		return LABCHECK_ERROR_CRITICAL;
 	}
 	
-	sprintf(cmd, "%s %s %c %s", original, input_files, redirect_needed * '>', out_file2);
-	/*printf("cmd to execute: %s\n", cmd);*/
+	assert(lab4_make_cmd(cmd, original, input_type, input_file, output_type, out_file2) == 0);
 	result = system(cmd);
 	if(result != 0) {
 		return LABCHECK_ERROR_CRITICAL;
@@ -56,10 +74,24 @@ static labcheck_error lab4_check_test(const char* executable, const char* origin
 	return lab4_cmp_files(out_file1, out_file2);
 }
 
+static int lab4_check_common_tests(const char* executable, const char* original, const int redirect_needed) {
+	labcheck_error err;
+	int result = 0, i;
+	char msg[255], file[1024];
+	const int lab4_common_test_count = 4;
+	for(i = 0; i < lab4_common_test_count; i++) {
+		sprintf(msg, "Checking common test #%i...", i);
+		sprintf(file, "%s%i.in", LAB4_TESTS_FOLDER, i);
+		err = lab4_check_test(executable, "cat", LAB4_INPUT_FILE, file, LAB4_OUTPUT_STDOUT);
+		lab4_print_status(err, msg);
+	}
+	return result;
+}
+
 static labcheck_error lab4_check_restricted_action(const char* executable) {
 	char cmd[1024];
 	int result;
-	sprintf(cmd, "ls -l / | LD_PRELOAD=./bin/librestriction.so %s >/dev/null", executable);
+	sprintf(cmd, "ls -l / | "LAB4_RESTRICTION_LIB" %s >/dev/null", executable);
 	result = system(cmd);
 	if(WEXITSTATUS(result) == LABCHECK_RESTRICTED_OP_EXITCODE) {
 		return LABCHECK_ERROR_FAIL;
@@ -68,14 +100,14 @@ static labcheck_error lab4_check_restricted_action(const char* executable) {
 }
 
 static int lab4_check_cat(const char* executable) {
+	int result = 0;
 	labcheck_error err = lab4_check_restricted_action(executable);
-	lab4_check_print_status(err, "Checking for syscalls read/write...");
+	lab4_print_status(err, "Checking for syscalls read/write...");
 	if(err != LABCHECK_ERROR_OK) {
 		return 1;
 	}
-	err = lab4_check_test(executable, "cat", LAB4_TESTS_FOLDER"1.in", 1);
-	lab4_check_print_status(err, "Checking common tests...");
-	return 0;
+	result += lab4_check_common_tests(executable, "cat", 1);
+	return result;
 }
 
 int lab4_check(unsigned long var, const char* executable) {
