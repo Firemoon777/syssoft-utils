@@ -40,7 +40,7 @@ static int lab4_make_cmd(char* cmd, const char* executable,
 			return 0;
 			
 		case LAB4_INPUT_PIPE:
-			sprintf(cmd, "cat %s | "LAB4_RESTRICTION_LIB" %s %c %s", input, executable, output_type * '>', output_file);
+			sprintf(cmd, "cat %s | "LAB4_RESTRICTION_LIB" %s - %c %s", input, executable, output_type * '>', output_file);
 			return 0;
 		
 		default:
