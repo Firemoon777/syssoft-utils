@@ -40,7 +40,7 @@ static int lab4_make_cmd(char* cmd, const char* executable,
 			return 0;
 			
 		case LAB4_INPUT_PIPE:
-			sprintf(cmd, "cat %s | "LAB4_RESTRICTION_LIB" %s - %c %s", input, executable, output_type * '>', output_file);
+			sprintf(cmd, "cat %s | "LAB4_RESTRICTION_LIB" %s %c %s", input, executable, output_type * '>', output_file);
 			return 0;
 		
 		default:
@@ -82,7 +82,7 @@ static int lab4_check_common_tests(const char* executable, const char* original,
 	for(i = 0; i < lab4_common_test_count; i++) {
 		sprintf(msg, "Checking common test #%i...", i);
 		sprintf(file, "%s%i.in", LAB4_TESTS_FOLDER, i);
-		err = lab4_check_test(executable, "cat", input_type, file, output_type);
+		err = lab4_check_test(executable, original, input_type, file, output_type);
 		lab4_print_status(err, msg);
 	}
 	return result;
@@ -115,6 +115,22 @@ static int lab4_check_cat(const char* executable) {
 	return result;
 }
 
+static int lab4_check_head(const char* executable) {
+	int result = 0;
+	labcheck_error err = lab4_check_restricted_action(executable);
+	lab4_print_status(err, "Checking for syscalls read/write...");
+	if(err != LABCHECK_ERROR_OK) {
+		return 1;
+	}
+	result += lab4_check_common_tests(executable, "head", LAB4_INPUT_FILE, LAB4_OUTPUT_STDOUT);
+	err = lab4_check_test(executable, "head", LAB4_INPUT_PIPE, LAB4_TESTS_FOLDER"1.in", LAB4_OUTPUT_STDOUT);
+	lab4_print_status(err, "Checking for pipe input...");
+	
+	err = lab4_check_test(executable, "head", LAB4_INPUT_FILE, LAB4_TESTS_FOLDER"1.in "LAB4_TESTS_FOLDER"2.in "LAB4_TESTS_FOLDER"3.in ", LAB4_OUTPUT_STDOUT);
+	lab4_print_status(err, "Checking for several files input... (optional)");
+	return result;
+}
+
 int lab4_check(unsigned long var, const char* executable) {
 	const char* var_name[] = {
 		"zsh", 
@@ -140,6 +156,9 @@ int lab4_check(unsigned long var, const char* executable) {
 	switch(var) {
 		case LAB4_CAT:
 			return lab4_check_cat(executable);
+			
+		case LAB4_HEAD:
+			return lab4_check_head(executable);
 			
 		default: 
 			fprintf(stderr, "checker for %s is not implemented!\n", var_name[var]);
