@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE+1];
 	int fd;
 	ssize_t buff_readed;
-	size_t i;
+	size_t i = 1;
 	if(argc == 1) {
 		argc++;
 		*(argv + 1) = "-\0";
@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 		}
 		if(fd < 0) {
 			perror(argv[i]);	
+			continue;
 		}
 		memset(buff, 0, BUFFER_SIZE+1);
 		while((buff_readed = read(fd, buff, BUFFER_SIZE)) > 0) {
