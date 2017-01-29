@@ -23,9 +23,9 @@ static void lab4_print_status(labcheck_error status, char* msg) {
 }
 
 static int lab4_cmp_files(const char* file1, const char* file2) {
-	char* cmd = (char*)malloc((5 + strlen(file1) + strlen(file2)) * sizeof(char));
+	char* cmd = (char*)malloc((15 + strlen(file1) + strlen(file2)) * sizeof(char));
 	int result;
-	sprintf(cmd, "cmp %s %s", file1, file2);
+	sprintf(cmd, "cmp %s %s 2>/dev/null", file1, file2);
 	result = system(cmd);
 	free(cmd);
 	return WEXITSTATUS(result) == 0 ? LABCHECK_ERROR_OK : LABCHECK_ERROR_FAIL;
@@ -40,7 +40,7 @@ static int lab4_make_cmd(char* cmd, const char* executable,
 			return 0;
 			
 		case LAB4_INPUT_PIPE:
-			sprintf(cmd, "%s | "LAB4_RESTRICTION_LIB" %s %c %s", input, executable, output_type * '>', output_file);
+			sprintf(cmd, "cat %s | "LAB4_RESTRICTION_LIB" %s %c %s", input, executable, output_type * '>', output_file);
 			return 0;
 		
 		default:
@@ -74,7 +74,7 @@ static labcheck_error lab4_check_test(const char* executable, const char* origin
 	return lab4_cmp_files(out_file1, out_file2);
 }
 
-static int lab4_check_common_tests(const char* executable, const char* original, const int redirect_needed) {
+static int lab4_check_common_tests(const char* executable, const char* original, const lab4_input_type input_type, const lab4_output_type output_type) {
 	labcheck_error err;
 	int result = 0, i;
 	char msg[255], file[1024];
@@ -82,7 +82,7 @@ static int lab4_check_common_tests(const char* executable, const char* original,
 	for(i = 0; i < lab4_common_test_count; i++) {
 		sprintf(msg, "Checking common test #%i...", i);
 		sprintf(file, "%s%i.in", LAB4_TESTS_FOLDER, i);
-		err = lab4_check_test(executable, "cat", LAB4_INPUT_FILE, file, LAB4_OUTPUT_STDOUT);
+		err = lab4_check_test(executable, "cat", input_type, file, output_type);
 		lab4_print_status(err, msg);
 	}
 	return result;
@@ -106,7 +106,12 @@ static int lab4_check_cat(const char* executable) {
 	if(err != LABCHECK_ERROR_OK) {
 		return 1;
 	}
-	result += lab4_check_common_tests(executable, "cat", 1);
+	result += lab4_check_common_tests(executable, "cat", LAB4_INPUT_FILE, LAB4_OUTPUT_STDOUT);
+	err = lab4_check_test(executable, "cat", LAB4_INPUT_PIPE, LAB4_TESTS_FOLDER"1.in", LAB4_OUTPUT_STDOUT);
+	lab4_print_status(err, "Checking for pipe input...");
+	
+	err = lab4_check_test(executable, "cat", LAB4_INPUT_FILE, LAB4_TESTS_FOLDER"1.in "LAB4_TESTS_FOLDER"2.in "LAB4_TESTS_FOLDER"3.in ", LAB4_OUTPUT_STDOUT);
+	lab4_print_status(err, "Checking for several files input... (optional)");
 	return result;
 }
 
