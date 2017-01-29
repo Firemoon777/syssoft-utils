@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/wait.h>
+#include <unistd.h>
+
 #include "labcheck.h"
 #include "lab4.h"
 

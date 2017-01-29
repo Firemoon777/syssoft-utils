@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -O3 -Wall -Werror -pedantic -std=c89 -c
+CFLAGS=-g -O3 -Wall -Werror -pedantic -std=c89
 LIBS=
 SRC=src/labcheck.c src/lab4.c
 OBJ=$(SRC:src/%.c=build/%.o)
@@ -11,7 +11,7 @@ labcheck: $(OBJ)
 	$(CC) -o bin/$@ $(OBJ) $(LIBS)
 	
 build/%.o: src/%.c
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $<
 	
 librestriction.so: dir
 	$(CC) $(CFLAGS) -shared -fPIC $(LIBRESTRSRC) -o bin/$@

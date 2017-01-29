@@ -4,6 +4,7 @@
 int lab4_check(unsigned long var, const char* executable);
 
 #define LAB4_VARIANTS_COUNT 15
+#define LAB4_TESTS_FOLDER LABCHECK_TESTS_FOLDER"lab4/"
 
 typedef enum {
 	LAB4_ZSH  =  0,
