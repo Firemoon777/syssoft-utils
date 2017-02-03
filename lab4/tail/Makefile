@@ -3,7 +3,7 @@ CFLAGS=-Wall -Werror -c
 PROJECT=tail
 
 all: $(PROJECT).o
-	$(CC) $< -o $(PROJECT)
+	$(CC) $^ -o $(PROJECT)
 	
 $(PROJECT).o: $(PROJECT).c
 	$(CC) $(CFLAGS) $< -o $@
