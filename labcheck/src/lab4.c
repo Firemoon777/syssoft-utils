@@ -78,7 +78,7 @@ static int lab4_check_common_tests(const char* executable, const char* original,
 	labcheck_error err;
 	int result = 0, i;
 	char msg[255], file[1024];
-	const int lab4_common_test_count = 4;
+	const int lab4_common_test_count = 5;
 	for(i = 0; i < lab4_common_test_count; i++) {
 		sprintf(msg, "Checking common test #%i...", i);
 		sprintf(file, "%s%i.in", LAB4_TESTS_FOLDER, i);
@@ -99,36 +99,37 @@ static labcheck_error lab4_check_restricted_action(const char* executable) {
 	return LABCHECK_ERROR_OK;
 }
 
-static int lab4_check_cat(const char* executable) {
+static int lab4_check_do(const char* executable, const char* original, lab4_input_type input, int options) {
 	int result = 0;
 	labcheck_error err = lab4_check_restricted_action(executable);
 	lab4_print_status(err, "Checking for syscalls read/write...");
 	if(err != LABCHECK_ERROR_OK) {
 		return 1;
 	}
-	result += lab4_check_common_tests(executable, "cat", LAB4_INPUT_FILE, LAB4_OUTPUT_STDOUT);
-	err = lab4_check_test(executable, "cat", LAB4_INPUT_PIPE, LAB4_TESTS_FOLDER"1.in", LAB4_OUTPUT_STDOUT);
-	lab4_print_status(err, "Checking for pipe input...");
+	result += lab4_check_common_tests(executable, original, input, LAB4_OUTPUT_STDOUT);
 	
-	err = lab4_check_test(executable, "cat", LAB4_INPUT_FILE, LAB4_TESTS_FOLDER"1.in "LAB4_TESTS_FOLDER"2.in "LAB4_TESTS_FOLDER"3.in ", LAB4_OUTPUT_STDOUT);
-	lab4_print_status(err, "Checking for several files input... (optional)");
+	if(options & CHECK_PIPE_INPUT) {
+		err = lab4_check_test(executable, original, LAB4_INPUT_PIPE, LAB4_TESTS_FOLDER"1.in", LAB4_OUTPUT_STDOUT);
+		lab4_print_status(err, "Checking for pipe input...");
+	}
+	
+	if(options & CHECK_SEVERAL_FILES) {
+		err = lab4_check_test(executable, original, LAB4_INPUT_FILE, LAB4_TESTS_FOLDER"1.in "LAB4_TESTS_FOLDER"2.in "LAB4_TESTS_FOLDER"3.in ", LAB4_OUTPUT_STDOUT);
+		lab4_print_status(err, "Checking for several files input... (optional)");
+	}
 	return result;
 }
 
+static int lab4_check_cat(const char* executable) { 
+	return lab4_check_do(executable, "cat", LAB4_INPUT_FILE, CHECK_PIPE_INPUT | CHECK_SEVERAL_FILES);
+}
+
 static int lab4_check_head(const char* executable) {
-	int result = 0;
-	labcheck_error err = lab4_check_restricted_action(executable);
-	lab4_print_status(err, "Checking for syscalls read/write...");
-	if(err != LABCHECK_ERROR_OK) {
-		return 1;
-	}
-	result += lab4_check_common_tests(executable, "head", LAB4_INPUT_FILE, LAB4_OUTPUT_STDOUT);
-	err = lab4_check_test(executable, "head", LAB4_INPUT_PIPE, LAB4_TESTS_FOLDER"1.in", LAB4_OUTPUT_STDOUT);
-	lab4_print_status(err, "Checking for pipe input...");
-	
-	err = lab4_check_test(executable, "head", LAB4_INPUT_FILE, LAB4_TESTS_FOLDER"1.in "LAB4_TESTS_FOLDER"2.in "LAB4_TESTS_FOLDER"3.in ", LAB4_OUTPUT_STDOUT);
-	lab4_print_status(err, "Checking for several files input... (optional)");
-	return result;
+	return lab4_check_do(executable, "head", LAB4_INPUT_FILE, CHECK_PIPE_INPUT | CHECK_SEVERAL_FILES);
+}
+
+static int lab4_check_tail(const char* executable) {
+	return lab4_check_do(executable, "tail", LAB4_INPUT_FILE, CHECK_PIPE_INPUT);
 }
 
 int lab4_check(unsigned long var, const char* executable) {
@@ -159,6 +160,9 @@ int lab4_check(unsigned long var, const char* executable) {
 			
 		case LAB4_HEAD:
 			return lab4_check_head(executable);
+			
+		case LAB4_TAIL:
+			return lab4_check_tail(executable);
 			
 		default: 
 			fprintf(stderr, "checker for %s is not implemented!\n", var_name[var]);

@@ -6,6 +6,10 @@ int lab4_check(unsigned long var, const char* executable);
 #define LAB4_VARIANTS_COUNT 15
 #define LAB4_TESTS_FOLDER LABCHECK_TESTS_FOLDER"lab4/"
 #define LAB4_RESTRICTION_LIB "LD_PRELOAD=./bin/librestriction.so"
+
+#define CHECK_SEVERAL_FILES 1
+#define CHECK_PIPE_INPUT 2
+
 typedef enum {
 	LAB4_ZSH  =  0,
 	LAB4_CAT  =  1,
