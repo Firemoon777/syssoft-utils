@@ -56,10 +56,12 @@ int main(int argc, char** argv) {
 			offset = 0;
 		}
 	}
+	if(offset < 0) {
+		offset = 0;
+	}
 	
 	while((buff_readed = pread(fd, buff, BUFFER_SIZE, offset)) != 0) {
 		if(buff_readed < 0) {
-			perror("read");
 			break;
 		}
 		buff_w = write(STDOUT_FILENO, buff, buff_readed);
