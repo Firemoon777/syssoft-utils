@@ -124,12 +124,30 @@ sub check_preload {
 	print_ans($result);
 }
 
+sub check_several_files {
+	my ($executable, $original, $options) = @_;
+	my @common_tests;
+	my $result;
+	
+	opendir(DIR, $labtests) or die $!;
+	while (my $file = readdir(DIR)) {	
+		next if ($file =~ m/^\./);
+        push @common_tests, "$labtests$file";
+    }
+	closedir(DIR);
+	
+	print_msg("Checking several files...");
+	$result = check_test($executable, $original, join(" ", @common_tests), $options);
+	print_ans($result);
+}
+
 sub check_cat {
 	my $executable = $_[0];
 	my $original = "cat";
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect);
+	check_several_files($executable, $original, $file_input | $redirect);
 }
 
 sub check_wc {
