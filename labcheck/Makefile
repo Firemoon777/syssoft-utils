@@ -1,24 +1,11 @@
 CC=gcc
 CFLAGS=-g -O3 -Wall -Werror -pedantic -std=c89
-LIBS=
-SRC=src/labcheck.c src/lab4.c
-OBJ=$(SRC:src/%.c=build/%.o)
-LIBRESTRSRC=src/librestriction/librestriction.c
 	
-all: librestriction.so labcheck
+all: lab4_preload.so 
 	
-labcheck: $(OBJ)
-	$(CC) -o bin/$@ $(OBJ) $(LIBS)
-	
-build/%.o: src/%.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-	
-librestriction.so: dir
-	$(CC) $(CFLAGS) -shared -fPIC $(LIBRESTRSRC) -o bin/$@
-	
-dir: 
-	mkdir -p bin build
+lab4_preload.so: 
+	$(CC) $(CFLAGS) -shared -fPIC lab4_preload.c -o $@
 	
 clean:
-	rm bin/* build/*
+	rm lab4_preload.so 
 
