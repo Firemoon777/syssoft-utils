@@ -5,6 +5,8 @@ use warnings;
 
 my $preload = "./lab4_preload.so";
 my $labtests = "./labtests/lab4/";
+my $preload_test = "${labtests}1.in >/dev/null";
+
 my $preload_exitcode = 42;
 
 my @var = (
@@ -30,6 +32,25 @@ my $pipe_input = 1 << 0;
 my $file_input = 1 << 1;
 my $trim_whitespaces = 1 << 2;
 my $redirect = 1 << 3;
+
+
+sub print_msg {
+	my ($msg) = @_;
+	my $s = " "x(50 - length($msg));
+	print "$msg$s";
+}
+
+sub print_ans {
+	my ($msg) = @_;
+	if($msg == 0) {
+		print "[  OK  ]\n";
+	} elsif($msg == 1) {
+		print "[ FAIL ]\n";
+	} else {
+		print "[ FAIL ]\nCritical error.\n";
+		exit;
+	}
+}
 
 sub launch { 
 	my ($executable, $options, $in_file, $out_file) = @_;
@@ -65,12 +86,11 @@ sub check_test {
 	my $exit_code;
 	
 	if(launch($executable, $options, $test_file, $out_exec) == $preload_exitcode) {
-		print "No.\n";
 		return 2;
 	}
 	launch($original, $options, $test_file, $out_orig);
 	
-	system("cmp $out_exec $out_orig");
+	system("cmp -s $out_exec $out_orig");
 	return $? >> 8;
 }
 
@@ -89,15 +109,26 @@ sub check_common_tests {
 	@common_tests = sort @common_tests;
 
 	foreach(@common_tests) {
+		print_msg("Checking test ${_}...");
 		$result = check_test($executable, $original, "$labtests$_", $options);
-		print "Common test $_ exits with exits code = $result\n";
+		print_ans($result);
 	}
+}
+
+sub check_preload {
+	my ($executable, $options) = @_;
+	my $result;
+	my $out_exec = "exec.out";
+	print_msg("Checking for read/write...");
+	$result = launch($executable, $options, $preload_test, $out_exec);
+	print_ans($result);
 }
 
 sub check_cat {
 	my $executable = $_[0];
 	my $original = "cat";
 	
+	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect);
 }
 
@@ -105,6 +136,7 @@ sub check_wc {
 	my $executable = $_[0];
 	my $original = "wc";
 	
+	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect | $trim_whitespaces);
 }
 
