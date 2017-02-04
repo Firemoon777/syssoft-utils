@@ -136,7 +136,7 @@ sub check_several_files {
     }
 	closedir(DIR);
 	
-	print_msg("Checking several files...");
+	print_msg("Checking several files...(optional)");
 	$result = check_test($executable, $original, join(" ", @common_tests), $options);
 	print_ans($result);
 }
@@ -156,13 +156,35 @@ sub check_wc {
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect | $trim_whitespaces);
+	check_several_files($executable, $original, $file_input | $redirect);
+}
+
+sub check_head {
+	my $executable = $_[0];
+	my $original = "head";
+	
+	check_preload($executable, $file_input);
+	check_common_tests($executable, $original, $file_input | $redirect);
+	check_several_files($executable, $original, $file_input | $redirect);
+}
+
+sub check_tail {
+	my $executable = $_[0];
+	my $original = "tail";
+	
+	check_preload($executable, $file_input);
+	check_common_tests($executable, $original, $file_input | $redirect);
 }
 
 sub check {
 	my ($varnum, $executable) = @_;
-	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n";
+	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
 	if($varnum == 1) {
 		check_cat($executable);
+	} elsif($varnum == 3) {
+		check_head($executable);
+	} elsif($varnum == 4) {
+		check_tail($executable);
 	} elsif($varnum == 6) {
 		check_wc($executable);
 	} else {
