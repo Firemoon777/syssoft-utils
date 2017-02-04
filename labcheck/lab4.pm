@@ -32,6 +32,7 @@ my $pipe_input = 1 << 0;
 my $file_input = 1 << 1;
 my $trim_whitespaces = 1 << 2;
 my $redirect = 1 << 3;
+my $check_in_out = 1 << 4;
 
 
 sub print_msg {
@@ -88,9 +89,15 @@ sub check_test {
 	if(launch($executable, $options, $test_file, $out_exec) == $preload_exitcode) {
 		return 2;
 	}
-	launch($original, $options, $test_file, $out_orig);
+	if($options & $check_in_out == 0) {
+		launch($original, $options, $test_file, $out_orig);
+	}
 	
-	system("cmp -s $out_exec $out_orig");
+	if($options & $check_in_out) {
+		system("cmp -s $out_exec $test_file");
+	} else {
+		system("cmp -s $out_exec $out_orig");
+	}
 	return $? >> 8;
 }
 
