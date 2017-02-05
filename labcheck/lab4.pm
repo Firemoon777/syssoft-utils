@@ -173,7 +173,7 @@ sub check_preload {
 	my $out_exec = "/dev/null";
 	my $test = ($options & $check_cmp_op) ? $preload_test_cmp : $preload_test;
 	print_msg("Checking for read/write...");
-	$result = launch($executable, $options, $test, $out_exec);
+	$result = launch($executable, $options | $redirect, $test, $out_exec);
 	print_ans(($result > 1) * 2);
 }
 
@@ -266,7 +266,8 @@ sub check_cmp {
 }
 
 sub check {
-	my ($varnum, $executable) = @_;
+	my ($varnum, $projdir) = @_;
+	my $executable = "$projdir$var[$varnum]";
 	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
 	if($varnum == 1) {
 		check_cat($executable);

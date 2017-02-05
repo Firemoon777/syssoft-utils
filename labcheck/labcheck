@@ -4,6 +4,7 @@ use strict;
 use v5.8.4;
 use warnings;
 use lab4 qw (check);
+use labcommon qw (analyze);
 
 my $argc = $#ARGV + 1;
 
@@ -12,9 +13,10 @@ if($argc != 3) {
 	exit;
 }
 
-print "labnum = $ARGV[0], labvar = $ARGV[1], executable = $ARGV[2]\n";
+print "labnum = $ARGV[0], labvar = $ARGV[1], project dir = $ARGV[2]\n";
 
 if($ARGV[0] == 4) { 
+	labcommon::analyze($ARGV[2]);
 	lab4::check( $ARGV[1], $ARGV[2] );
 } elsif($ARGV[0] == 5) { 
 	print "Lab5 checker not implemented!\n";
