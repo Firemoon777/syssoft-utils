@@ -31,7 +31,7 @@ int uint_to_string(char* str, size_t n) {
 int main(int argc, char** argv) {
 	char buff[2][BUFFER_SIZE];
 	int fd[2];
-	ssize_t buff_readed[2];
+	ssize_t buff_readed[2], min;
 	size_t i = 0, c = 1, l = 1;
 	
 	if(argc != 3) {
@@ -57,26 +57,12 @@ int main(int argc, char** argv) {
 	while(buff_readed[0] > 0) {
 		buff_readed[0] = read(fd[0], buff[0], BUFFER_SIZE);
 		buff_readed[1] = read(fd[1], buff[1], BUFFER_SIZE);
+		min = (buff_readed[0] < buff_readed[1]) ? buff_readed[0] : buff_readed[1];
 		if(buff_readed[0] < 0 || buff_readed[1] < 0) {
 			perror("read");
 			return -1;
 		}
-		for(i = 0; i < buff_readed[0]; i++) {
-			if(buff[0][i] == EOF) {
-				char str[1000] = "cmp: EOF on ";
-				strcat(str, argv[1]);
-				strcat(str, "\n");
-				write(STDOUT_FILENO, str, strlen(str));
-				return 1;
-			}
-			if(buff[1][i] == EOF) {
-				char str[1000] = "cmp: EOF on ";
-				strcat(str, argv[2]);
-				strcat(str, "\n");
-				write(STDOUT_FILENO, str, strlen(str));
-				return 1;
-			}
-			
+		for(i = 0; i < min; i++) {			
 			if(buff[0][i] != buff[1][i]) {
 				char str[1000];
 				strcpy(str, argv[1]);
@@ -93,6 +79,20 @@ int main(int argc, char** argv) {
 			c++;
 			if(buff[0][i] == '\n') 
 				l++;
+		}
+		if(buff_readed[0] == min && buff_readed[0] != buff_readed[1]) {
+			char str[1000] = "cmp: EOF on ";
+			strcat(str, argv[1]);
+			strcat(str, "\n");
+			write(STDOUT_FILENO, str, strlen(str));
+			return 1;
+		}
+		if(buff_readed[1] == min && buff_readed[0] != buff_readed[1]) {
+			char str[1000] = "cmp: EOF on ";
+			strcat(str, argv[2]);
+			strcat(str, "\n");
+			write(STDOUT_FILENO, str, strlen(str));
+			return 1;
 		}
 	}
 		
