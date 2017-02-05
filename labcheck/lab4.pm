@@ -34,6 +34,7 @@ my $trim_whitespaces = 1 << 2;
 my $redirect = 1 << 3;
 my $check_in_out = 1 << 4;
 my $disable_preload = 1 << 5;
+my $remove_out = 1 << 6;
 
 sub print_msg {
 	my ($msg) = @_;
@@ -56,6 +57,9 @@ sub print_ans {
 sub launch { 
 	my ($executable, $options, $in_file, $out_file) = @_;
 	my $cmd = "";
+	if($options & $remove_out) {
+		system("rm -f $out_file");
+	}
 	if($options & $pipe_input) {
 		$cmd .= "cat $in_file | ";
 	}
@@ -120,7 +124,7 @@ sub check_common_tests {
 	foreach(@common_tests) {
 		print_msg("Checking test ${_}...");
 		$result = check_test($executable, $original, "$labtests$_", $options);
-		print_ans($result);
+		print_ans($result * 2);
 	}
 }
 
@@ -159,6 +163,13 @@ sub check_cat {
 	check_several_files($executable, $original, $file_input | $redirect);
 }
 
+sub check_cp {
+	my $executable = $_[0];
+	my $original = "cp";
+
+	check_common_tests($executable, $original, $file_input | $check_in_out | $remove_out);
+}
+
 sub check_wc {
 	my $executable = $_[0];
 	my $original = "wc";
@@ -190,6 +201,8 @@ sub check {
 	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
 	if($varnum == 1) {
 		check_cat($executable);
+	} elsif($varnum == 2) {
+		check_cp($executable);
 	} elsif($varnum == 3) {
 		check_head($executable);
 	} elsif($varnum == 4) {
