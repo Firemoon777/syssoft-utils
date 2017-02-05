@@ -89,7 +89,7 @@ sub check_test {
 	if(launch($executable, $options, $test_file, $out_exec) == $preload_exitcode) {
 		return 2;
 	}
-	if($options & $check_in_out == 0) {
+	if(($options & $check_in_out) == 0) {
 		launch($original, $options, $test_file, $out_orig);
 	}
 	
@@ -163,7 +163,7 @@ sub check_wc {
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect | $trim_whitespaces);
-	check_several_files($executable, $original, $file_input | $redirect);
+	check_several_files($executable, $original, $file_input | $redirect | $trim_whitespaces);
 }
 
 sub check_head {
