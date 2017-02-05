@@ -33,7 +33,7 @@ my $file_input = 1 << 1;
 my $trim_whitespaces = 1 << 2;
 my $redirect = 1 << 3;
 my $check_in_out = 1 << 4;
-
+my $disable_preload = 1 << 5;
 
 sub print_msg {
 	my ($msg) = @_;
@@ -59,7 +59,9 @@ sub launch {
 	if($options & $pipe_input) {
 		$cmd .= "cat $in_file | ";
 	}
-	$cmd .= "LD_PRELOAD=$preload ";
+	if(($options & $disable_preload) == 0) {
+		$cmd .= "LD_PRELOAD=$preload ";
+	}
 	$cmd .= "$executable ";
 	if($options & $file_input) {
 		$cmd .= "$in_file ";
@@ -90,7 +92,7 @@ sub check_test {
 		return 2;
 	}
 	if(($options & $check_in_out) == 0) {
-		launch($original, $options, $test_file, $out_orig);
+		launch($original, $options | $disable_preload, $test_file, $out_orig);
 	}
 	
 	if($options & $check_in_out) {
