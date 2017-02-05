@@ -5,7 +5,8 @@ use warnings;
 
 my $preload = "./lab4_preload.so";
 my $labtests = "./labtests/lab4/";
-my $preload_test = "${labtests}1.in >/dev/null";
+my $preload_test = "${labtests}1.in";
+my $preload_test_cmp = "${labtests}1.in ${labtests}0.in";
 
 my $preload_exitcode = 42;
 
@@ -28,15 +29,16 @@ my @var = (
 );
 
 # options 
-my $pipe_input = 1 << 0;
-my $file_input = 1 << 1;
+my $pipe_input       = 1 << 0;
+my $file_input       = 1 << 1;
 my $trim_whitespaces = 1 << 2;
-my $redirect = 1 << 3;
-my $check_in_out = 1 << 4;
-my $disable_preload = 1 << 5;
-my $remove_out = 1 << 6;
-my $check_tee_op = 1 << 7;
-my $several_output = 1 << 8;
+my $redirect         = 1 << 3;
+my $check_in_out     = 1 << 4;
+my $disable_preload  = 1 << 5;
+my $remove_out       = 1 << 6;
+my $check_tee_op     = 1 << 7;
+my $several_output   = 1 << 8;
+my $check_cmp_op     = 1 << 9;
 
 sub print_msg {
 	my ($msg) = @_;
@@ -79,6 +81,7 @@ sub launch {
 		$cmd .= "> ";
 	}
 	$cmd .= "$out_file ";
+	$cmd .= " 2>&1";
 	
 	#print "cmd: $cmd\n";
 	system($cmd);
@@ -167,10 +170,11 @@ sub check_common_tests {
 sub check_preload {
 	my ($executable, $options) = @_;
 	my $result;
-	my $out_exec = "exec.out";
+	my $out_exec = "/dev/null";
+	my $test = ($options & $check_cmp_op) ? $preload_test_cmp : $preload_test;
 	print_msg("Checking for read/write...");
-	$result = launch($executable, $options, $preload_test, $out_exec);
-	print_ans($result);
+	$result = launch($executable, $options, $test, $out_exec);
+	print_ans(($result > 1) * 2);
 }
 
 sub check_several_files {
@@ -236,9 +240,29 @@ sub check_tee {
 	my $executable = $_[0];
 	my $original = "tee";
 	
-	check_preload($executable, $pipe_input | $remove_out);
+	check_preload($executable, $pipe_input | $redirect);
 	check_common_tests($executable, $original, $pipe_input | $remove_out | $check_tee_op);
 	check_several_files($executable, $original, $pipe_input | $several_output | $check_tee_op);
+}
+
+sub check_cmp {
+	my $executable = $_[0];
+	my $original = "cmp";
+	
+	my $result;
+	check_preload($executable, $file_input | $redirect | $check_cmp_op);
+
+	print_msg("Checking test 1.in 2.in...");
+	$result = check_test($executable, $original, "${labtests}1.in ${labtests}2.in", $file_input | $redirect);
+	print_ans($result);
+	
+	print_msg("Checking test 5.in 5.in...");
+	$result = check_test($executable, $original, "${labtests}5.in ${labtests}5.in", $file_input | $redirect);
+	print_ans($result);
+	
+	print_msg("Checking test 0.in 0.in...");
+	$result = check_test($executable, $original, "${labtests}0.in ${labtests}0.in", $file_input | $redirect);
+	print_ans($result);
 }
 
 sub check {
@@ -256,6 +280,8 @@ sub check {
 		check_tee($executable);
 	} elsif($varnum == 6) {
 		check_wc($executable);
+	} elsif($varnum == 7) {
+		check_cmp($executable);
 	} else {
 		print "Checker for variant $var[$varnum] not implemented!\n";
 	}
