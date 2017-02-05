@@ -35,6 +35,8 @@ my $redirect = 1 << 3;
 my $check_in_out = 1 << 4;
 my $disable_preload = 1 << 5;
 my $remove_out = 1 << 6;
+my $check_tee_op = 1 << 7;
+my $several_output = 1 << 8;
 
 sub print_msg {
 	my ($msg) = @_;
@@ -85,8 +87,42 @@ sub launch {
 	return $? >> 8;
 }
 
+sub check_test_tee {
+	my ($executable, $original, $test_file, $options) = @_;
+	
+	my $stdout = "std.out";
+	my $out = "exec.out";
+	my $result;
+	
+	if($options & $several_output) {
+		$out .= " ex.out";
+	}
+	system("rm -f $out $stdout");
+	
+	if(launch($executable, $options, $test_file, "$out > $stdout")) {
+		return 1;
+	}
+	
+	if($options & $several_output) {
+		system("cmp -s $out");
+		$result += $? >> 8;
+		system("cmp -s $stdout ex.out");
+		$result += $? >> 8;
+	} else {
+		system("cmp -s $test_file $stdout");
+		$result = $? >> 8;
+		system("cmp -s $stdout $out");
+		$result += $? >> 8;
+	}
+	return $result > 0 ? 1 : 0;
+}
+
 sub check_test {
 	my ($executable, $original, $test_file, $options) = @_;
+	
+	if($options & $check_tee_op) {
+		return check_test_tee(@_);
+	}
 	
 	my $out_exec = "exec.out";
 	my $out_orig = "orig.out";
@@ -196,6 +232,15 @@ sub check_tail {
 	check_common_tests($executable, $original, $file_input | $redirect);
 }
 
+sub check_tee {
+	my $executable = $_[0];
+	my $original = "tee";
+	
+	check_preload($executable, $pipe_input | $remove_out);
+	check_common_tests($executable, $original, $pipe_input | $remove_out | $check_tee_op);
+	check_several_files($executable, $original, $pipe_input | $several_output | $check_tee_op);
+}
+
 sub check {
 	my ($varnum, $executable) = @_;
 	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
@@ -207,6 +252,8 @@ sub check {
 		check_head($executable);
 	} elsif($varnum == 4) {
 		check_tail($executable);
+	} elsif($varnum == 5) {
+		check_tee($executable);
 	} elsif($varnum == 6) {
 		check_wc($executable);
 	} else {
