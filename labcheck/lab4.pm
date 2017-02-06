@@ -39,6 +39,8 @@ my $remove_out       = 1 << 6;
 my $check_tee_op     = 1 << 7;
 my $several_output   = 1 << 8;
 my $check_cmp_op     = 1 << 9;
+my $add_minus        = 1 << 10;
+my $check_perm       = 1 << 11;
 
 sub print_msg {
 	my ($msg) = @_;
@@ -73,6 +75,9 @@ sub launch {
 	$cmd .= "$executable ";
 	if($options & $file_input) {
 		$cmd .= "$in_file ";
+	}
+	if($options & $add_minus) {
+		$cmd .= "- ";
 	}
 	if($options & $trim_whitespaces) {
 		$cmd .= " | sed -e 's/  */ /g; s/^ //g' ";
@@ -150,7 +155,8 @@ sub check_common_tests {
 	my ($executable, $original, $options) = @_;
 	my @common_tests = ();
 	my $result;
-	
+	my $mode_orig;
+	my $mode;
 	opendir(DIR, $labtests) or die $!;
 	while (my $file = readdir(DIR)) {	
 		next if ($file =~ m/^\./);
@@ -163,7 +169,13 @@ sub check_common_tests {
 	foreach(@common_tests) {
 		print_msg("Checking test ${_}...");
 		$result = check_test($executable, $original, "$labtests$_", $options);
-		print_ans($result * 2);
+		print_ans($result);
+		if($options & $check_perm) {
+			print_msg("Checking permissions of ${_}...");
+			$mode_orig = (stat("$labtests$_"))[2] & 07777;
+			$mode = (stat("exec.out"))[2] & 07777;
+			print_ans($mode_orig == $mode ? 0 : 1);
+		}
 	}
 }
 
@@ -194,29 +206,44 @@ sub check_several_files {
 	print_ans($result);
 }
 
+sub check_stdin_input {
+	my ($executable, $original, $options) = @_;
+	my $result;
+	
+	if($options & $add_minus) {
+		print_msg("Checking stdin input with - (optional)");
+	} else {
+		print_msg("Checking pipe input without arguments...(optional)");
+	}
+	$result = check_test($executable, $original, "${labtests}3.in" ,$options);
+	print_ans($result);
+}
+
+sub check_flag {
+	my ($executable, $original, $options, $flag) = @_;
+	my $result;
+	print_msg("Checking flag $flag (optional)");
+	$result = check_test("$executable $flag", "$original $flag", "${labtests}3.in" ,$options);
+	print_ans($result);
+}
+
 sub check_cat {
 	my $executable = $_[0];
 	my $original = "cat";
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect);
+	check_stdin_input($executable, $original, $pipe_input | $redirect | $add_minus);
+	check_stdin_input($executable, $original, $pipe_input | $redirect);
 	check_several_files($executable, $original, $file_input | $redirect);
+	check_flag($executable, $original, $file_input | $redirect, "-n");
 }
 
 sub check_cp {
 	my $executable = $_[0];
 	my $original = "cp";
 
-	check_common_tests($executable, $original, $file_input | $check_in_out | $remove_out);
-}
-
-sub check_wc {
-	my $executable = $_[0];
-	my $original = "wc";
-	
-	check_preload($executable, $file_input);
-	check_common_tests($executable, $original, $file_input | $redirect | $trim_whitespaces);
-	check_several_files($executable, $original, $file_input | $redirect | $trim_whitespaces);
+	check_common_tests($executable, $original, $file_input | $check_in_out | $remove_out | $check_perm);
 }
 
 sub check_head {
@@ -225,7 +252,10 @@ sub check_head {
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect);
+	check_stdin_input($executable, $original, $pipe_input | $redirect);
 	check_several_files($executable, $original, $file_input | $redirect);
+	check_flag($executable, $original, $file_input | $redirect, "-n 5");
+	check_flag($executable, $original, $file_input | $redirect, "-5");
 }
 
 sub check_tail {
@@ -234,6 +264,7 @@ sub check_tail {
 	
 	check_preload($executable, $file_input);
 	check_common_tests($executable, $original, $file_input | $redirect);
+	check_stdin_input($executable, $original, $pipe_input | $redirect);
 }
 
 sub check_tee {
@@ -243,6 +274,19 @@ sub check_tee {
 	check_preload($executable, $pipe_input | $redirect);
 	check_common_tests($executable, $original, $pipe_input | $remove_out | $check_tee_op);
 	check_several_files($executable, $original, $pipe_input | $several_output | $check_tee_op);
+	check_stdin_input($executable, $original, $pipe_input | $redirect);
+}
+
+sub check_wc {
+	my $executable = $_[0];
+	my $original = "wc";
+	
+	check_preload($executable, $file_input);
+	check_common_tests($executable, $original, $file_input | $redirect | $trim_whitespaces);
+	check_several_files($executable, $original, $file_input | $redirect | $trim_whitespaces);
+	check_stdin_input($executable, $original, $pipe_input | $redirect);
+	check_flag($executable, $original, $file_input | $redirect, "-l");
+	check_flag($executable, $original, $file_input | $redirect, "-l -c");
 }
 
 sub check_cmp {
@@ -262,6 +306,14 @@ sub check_cmp {
 	
 	print_msg("Checking test 0.in 0.in...");
 	$result = check_test($executable, $original, "${labtests}0.in ${labtests}0.in", $file_input | $redirect);
+	print_ans($result);
+	
+	print_msg("Checking exitcode...");
+	$result = 0;
+	
+	$result += launch($executable, $file_input | $redirect, "${labtests}5.in ${labtests}5.in", "/dev/null") == 0 ? 0 : 1;
+	$result += launch($executable, $file_input | $redirect, "${labtests}4.in ${labtests}5.in", "/dev/null") == 1 ? 0 : 1;
+	
 	print_ans($result);
 }
 
