@@ -17,6 +17,9 @@ int main(int argc, char** argv) {
 	off_t offset;
 	
 	struct stat st;
+	
+	memset(&st, 0, sizeof(struct stat));
+	memset(buff, 0, BUFFER_SIZE);
 
 	if(argc == 1) {
 		fd = STDIN_FILENO;
@@ -28,7 +31,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	
-	stat(argv[1], &st);
+	(void)stat(argv[1], &st);
 	offset = st.st_size - BUFFER_SIZE;
 		
 	while(offset >= 0) {
@@ -64,7 +67,7 @@ int main(int argc, char** argv) {
 		if(buff_readed < 0) {
 			break;
 		}
-		buff_w = write(STDOUT_FILENO, buff, buff_readed);
+		buff_w = write(STDOUT_FILENO, buff, (size_t)buff_readed);
 		if(buff_w < 0) {
 			perror("write");
 			break;

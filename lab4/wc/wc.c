@@ -10,17 +10,17 @@
 
 #define BUFFER_SIZE 80
 
-int uint_to_string(char* str, size_t n) {
+static int uint_to_string(char* str, size_t n) {
 	const int size = 10;
 	char num[size];
 	int i;
 	for(i = 0; i < size; i++) {
 		num[i] = ' ';
 	}
-	num[size-1] = 0;
+	num[size-1] = '\0';
 	i = size-2;
 	do {
-		num[i] = (n % 10) + '0';
+		num[i] = (char)((n % 10) + (int)'0');
 		i--;
 		n = n / 10;
 	} while(n > 0);
@@ -28,67 +28,69 @@ int uint_to_string(char* str, size_t n) {
 	return size;
 }
 
-void print_ans(size_t l, size_t w, size_t b, const char* name) {
+static void print_ans(size_t l, size_t w, size_t b, const char* name) {
 	char output[1000];
-	output[0] = 0;
+	output[0] = '\0';
 	
-	uint_to_string(output, l);
-	uint_to_string(output, w);
-	uint_to_string(output, b);
+	(void)uint_to_string(output, l);
+	(void)uint_to_string(output, w);
+	(void)uint_to_string(output, b);
 	
 	strcat(output, " ");
 	strcat(output, name);
 	strcat(output, "\n");
 	
-	write(STDOUT_FILENO, output, strlen(output));
+	(void)write(STDOUT_FILENO, output, strlen(output));
+}
+
+static void do_task(const char* filename, size_t* tl, size_t* tw, size_t* tb) {
+	char buff[BUFFER_SIZE];
+	ssize_t j, buff_readed;
+	size_t b = 0, w = 0, l = 0;
+	int word = 0, fd;
+	if(strcmp(filename, "-") == 0) {
+		fd = STDIN_FILENO;
+	} else {
+		fd = open(filename, O_RDONLY);
+	}
+	if(fd < 0) {
+		perror(filename);	
+		return;
+	}
+	while((buff_readed = read(fd, buff, BUFFER_SIZE)) > 0) {
+		b += buff_readed;
+		for(j = 0; j < buff_readed; j++) {
+			if(buff[j] == ' ' || buff[j] == '\t' || buff[j] == '\n') {
+				if(word != 0) {
+					w++;
+				}
+				word = 0;
+			} else {
+				word = 1;
+			}
+			if(buff[j] == '\n') 
+				l++;
+		}
+	}
+	if(buff_readed < 0) {
+		perror(filename);
+		return;
+	}
+	*tb += b;
+	*tw += w;
+	*tl += l;
+	print_ans(l, w, b, filename);
+	(void)close(fd);
 }
 
 int main(int argc, char** argv) {
-	char buff[BUFFER_SIZE+1];
-	int fd, word = 0;
-	ssize_t buff_readed;
-	size_t i = 1, b = 0, w = 0, l = 0, j, tb = 0, tw = 0, tl = 0;;
+	int i = 1;
+	size_t tb = 0, tw = 0, tl = 0;;
 	if(argc == 1) {
-		argc++;
-		*(argv + 1) = "-\0";
+		do_task("-", &tl, &tw, &tb);
 	}
 	for(i = 1; i < argc; i++) {
-		b = 0;
-		w = 0;
-		l = 0;
-		word = 0;
-		if(strcmp(argv[i], "-") == 0) {
-			fd = STDIN_FILENO;
-		} else {
-			fd = open(argv[i], O_RDONLY);
-		}
-		if(fd < 0) {
-			perror(argv[i]);	
-			continue;
-		}
-		while((buff_readed = read(fd, buff, BUFFER_SIZE)) > 0) {
-			b += buff_readed;
-			for(j = 0; j < buff_readed; j++) {
-				if(buff[j] == ' ' || buff[j] == '\t' || buff[j] == '\n' || buff[j] == EOF) {
-					if(word) {
-						w++;
-					}
-					word = 0;
-				} else {
-					word = 1;
-				}
-				if(buff[j] == '\n') 
-					l++;
-			}
-		}
-		if(buff_readed < 0) {
-			perror(argv[i]);
-			continue;
-		}
-		tb += b;
-		tw += w;
-		tl += l;
-		print_ans(l, w, b, argv[i]);
+		do_task(argv[i], &tl, &tw, &tb);
 	}
 	if(argc > 2) {
 		print_ans(tl, tw, tb, "total");

@@ -10,17 +10,17 @@
 
 #define BUFFER_SIZE 80
 
-int uint_to_string(char* str, size_t n) {
+static int uint_to_string(char* str, ssize_t n) {
 	const int size = 10;
 	char num[size];
 	int i;
 	for(i = 0; i < size; i++) {
 		num[i] = ' ';
 	}
-	num[size-1] = 0;
+	num[size-1] = '\0';
 	i = size-2;
 	do {
-		num[i] = (n % 10) + '0';
+		num[i] = (char)((n % 10) + (int)'0');
 		i--;
 		n = n / 10;
 	} while(n > 0);
@@ -31,11 +31,11 @@ int uint_to_string(char* str, size_t n) {
 int main(int argc, char** argv) {
 	char buff[2][BUFFER_SIZE];
 	int fd[2];
-	ssize_t buff_readed[2], min;
-	size_t i = 0, c = 1, l = 1;
+	ssize_t buff_readed[2];
+	ssize_t i = 0, c = 1, l = 1, min;
 	
 	if(argc != 3) {
-		write(STDOUT_FILENO, "Usage: cmp file1 file2\n", 22);  
+		(void)write(STDOUT_FILENO, "Usage: cmp file1 file2\n", 22);  
 		return 1;
 	}
 	
@@ -69,11 +69,11 @@ int main(int argc, char** argv) {
 				strcat(str, " ");
 				strcat(str, argv[2]);
 				strcat(str, " differ: char ");
-				uint_to_string(str, c);
+				(void)uint_to_string(str, c);
 				strcat(str, ", line ");
-				uint_to_string(str, l);
+				(void)uint_to_string(str, l);
 				strcat(str, "\n");
-				write(STDOUT_FILENO, str, strlen(str));
+				(void)write(STDOUT_FILENO, str, strlen(str));
 				return 1;
 			}
 			c++;
@@ -84,14 +84,14 @@ int main(int argc, char** argv) {
 			char str[1000] = "cmp: EOF on ";
 			strcat(str, argv[1]);
 			strcat(str, "\n");
-			write(STDOUT_FILENO, str, strlen(str));
+			(void)write(STDOUT_FILENO, str, strlen(str));
 			return 1;
 		}
 		if(buff_readed[1] == min && buff_readed[0] != buff_readed[1]) {
 			char str[1000] = "cmp: EOF on ";
 			strcat(str, argv[2]);
 			strcat(str, "\n");
-			write(STDOUT_FILENO, str, strlen(str));
+			(void)write(STDOUT_FILENO, str, strlen(str));
 			return 1;
 		}
 	}

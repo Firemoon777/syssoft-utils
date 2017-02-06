@@ -14,9 +14,12 @@ int main(int argc, char** argv) {
 	char buff[BUFFER_SIZE];
 	int* fd;
 	ssize_t buff_readed;
-	size_t i = 1;
+	int i = 1;
 	
 	fd = (int*)malloc(argc * sizeof(int));
+	if(fd == NULL) {
+		return 1;
+	}
 	
 	for(i = 1; i < argc; i++) {
 		fd[i] = open(argv[i], O_WRONLY | O_CREAT | O_EXCL, 0644);
@@ -30,7 +33,7 @@ int main(int argc, char** argv) {
 	while((buff_readed = read(STDIN_FILENO, buff, BUFFER_SIZE)) > 0) {
 		for(i = 0; i < argc; i++) {
 			if(fd[i] > 0) {
-				write(fd[i], buff, buff_readed);
+				(void)write(fd[i], buff, (size_t)buff_readed);
 			}
 		}
 	}
