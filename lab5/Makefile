@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Werror -c -Wextra -std=c89
 
-all: task9_server
+all: task9_server task10
 
 task1_server: task1_server.o
 	$(CC) $^ -o $@
@@ -21,5 +21,10 @@ task9_server: task9_server.o
 task9_server.o: task9_server.c
 	$(CC) $(CFLAGS) $^ -o $@
 
+task10: task10.o
+	$(CC) $^ -o $@
+		
+task10.o: task10.c
+	$(CC) $(CFLAGS) $^ -o $@
 clean:
 	rm *.o
