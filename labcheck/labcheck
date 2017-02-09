@@ -3,13 +3,14 @@
 use strict;
 use v5.8.4;
 use warnings;
-use lab4 qw (check);
 use labcommon qw (analyze);
+use lab4 qw (check);
+use lab5 qw (check);
 
 my $argc = $#ARGV + 1;
 
 if($argc != 3) {
-	print "Usage: $0 labnum labvar\n";
+	print "Usage: $0 labnum labvar lab\n";
 	exit;
 }
 
@@ -19,7 +20,7 @@ if($ARGV[0] == 4) {
 	labcommon::analyze($ARGV[2]);
 	lab4::check( $ARGV[1], $ARGV[2] );
 } elsif($ARGV[0] == 5) { 
-	print "Lab5 checker not implemented!\n";
+	lab5::check( $ARGV[1], $ARGV[2] );
 } elsif($ARGV[0] == 6) { 
 	print "Lab6 checker not implemented!\n";
 } else {
