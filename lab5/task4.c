@@ -4,10 +4,11 @@
 #include <unistd.h>
 
 #define ENG 26
+#define THREADS 2
 char alpha[ENG] = "abcdefghijklmnopqrstuvwxyz";
 
-pthread_t t1, t2;
-sem_t sem_rev, sem_ch;
+pthread_t t[THREADS];
+sem_t sem[THREADS];
 
 void print_alpha(void) {
 	int i;
@@ -21,7 +22,7 @@ void* reverse(void* d) {
 	(void)d;
 	int i;
 	char t;
-	while(sem_wait(&sem_rev) == 0) {
+	while(sem_wait(&sem[0]) == 0) {
 		for(i = 0; i < ENG / 2; i++) {
 			t = alpha[i];
 			alpha[i] = alpha[ENG - i - 1];
@@ -35,7 +36,7 @@ void* reverse(void* d) {
 void* chcase(void* d) {
 	(void)d;
 	int i;
-	while(sem_wait(&sem_ch) == 0) {
+	while(sem_wait(&sem[1]) == 0) {
 		for(i = 0; i < ENG; i++) {
 			alpha[i] += (alpha[i] - 'A') < ENG ? 32 : -32;
 		}
@@ -45,20 +46,18 @@ void* chcase(void* d) {
 }
 
 int main(void) {
-	if(sem_init(&sem_rev, 0, 0) == -1) {
-		perror("sem_init: sem_rev");
-		return -1;
+	int i;
+	for(i = 0; i < THREADS; i++) {
+		if(sem_init(&sem[i], 0, 0) == -1) {
+			perror("sem_init");
+			return -1;
+		}
 	}
-	if(sem_init(&sem_ch, 0, 0) == -1) {
-		perror("sem_init: sem_ch");
-		return -1;
-	}
-	pthread_create(&t1, NULL, reverse, NULL);
-	pthread_create(&t2, NULL, chcase, NULL);
+	pthread_create(&t[0], NULL, reverse, NULL);
+	pthread_create(&t[1], NULL, chcase, NULL);
 	while(1) {
-		sem_post(&sem_rev);
-		sleep(1);
-		sem_post(&sem_ch);
+		i = (i + 1) % THREADS;
+		sem_post(&sem[i]);
 		sleep(1);
 	}
 	return 0;
