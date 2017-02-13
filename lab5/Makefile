@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Werror -c -Wextra -std=c89
 
-all: task3
+all: task2
 
 part1: task1 task2 task3
 
@@ -21,6 +21,20 @@ task1_client: task1_client.o
 	$(CC) $^ -o $@
 		
 task1_client.o: task1_client.c
+	$(CC) $(CFLAGS) $^ -o $@
+
+task2: task2_server task2_client
+
+task2_server: task2_server.o
+	$(CC) $^ -o $@
+		
+task2_server.o: task2_server.c
+	$(CC) $(CFLAGS) $^ -o $@
+
+task2_client: task2_client.o
+	$(CC) $^ -o $@
+		
+task2_client.o: task2_client.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 task3: task3_server task3_client
