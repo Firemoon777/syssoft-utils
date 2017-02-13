@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #define ENG 26
-#define THREADS 2
+#define THREADS 3
 char alpha[ENG] = "abcdefghijklmnopqrstuvwxyz";
 
 pthread_t t[THREADS];
@@ -28,7 +28,7 @@ void* reverse(void* d) {
 			alpha[i] = alpha[ENG - i - 1];
 			alpha[ENG - i - 1] = t;
 		}
-		print_alpha();
+		sem_post(&sem[2]);
 	}
 	return NULL;
 }
@@ -40,7 +40,7 @@ void* chcase(void* d) {
 		for(i = 0; i < ENG; i++) {
 			alpha[i] += (alpha[i] - 'A') < ENG ? 32 : -32;
 		}
-		print_alpha();
+		sem_post(&sem[2]);
 	}
 	return NULL;
 }
@@ -56,8 +56,10 @@ int main(void) {
 	pthread_create(&t[0], NULL, reverse, NULL);
 	pthread_create(&t[1], NULL, chcase, NULL);
 	while(1) {
-		i = (i + 1) % THREADS;
+		i = (i + 1) % (THREADS - 1);
 		sem_post(&sem[i]);
+		sem_wait(&sem[2]);
+		print_alpha();
 		sleep(1);
 	}
 	return 0;
