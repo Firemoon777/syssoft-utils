@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Werror -c -Wextra -std=c89
 
-all: task5
+all: task6
 
 task1_server: task1_server.o
 	$(CC) $^ -o $@
@@ -25,6 +25,12 @@ task5: task5.o
 	$(CC) $^ -lpthread -o $@
 		
 task5.o: task5.c
+	$(CC) $(CFLAGS) $^ -o $@
+
+task6: task6.o
+	$(CC) $^ -lpthread -o $@
+		
+task6.o: task6.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 task9_server: task9_server.o
