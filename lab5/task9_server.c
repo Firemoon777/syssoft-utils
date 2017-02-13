@@ -7,15 +7,7 @@
 #include <sys/loadavg.h>  /* getloadavg */
 #include <string.h>       /* memset */
 
-#define AVG_ELEMENTS 3
-
-struct server_info {
-	pid_t pid;
-	uid_t uid;
-	gid_t gid;
-	time_t diff;
-	double loadavg[AVG_ELEMENTS];
-};
+#include "task.h"
 
 struct server_info srv_info;
 time_t start_time;
