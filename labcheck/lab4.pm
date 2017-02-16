@@ -3,6 +3,8 @@ package lab4;
 use strict;
 use warnings;
 
+use labcommon qw(print_msg print_ans);
+
 my $preload = "./lab4_preload.so";
 my $labtests = "./labtests/lab4/";
 my $preload_test = "${labtests}1.in";
@@ -42,23 +44,6 @@ my $check_cmp_op     = 1 << 9;
 my $add_minus        = 1 << 10;
 my $check_perm       = 1 << 11;
 
-sub print_msg {
-	my ($msg) = @_;
-	my $s = " "x(50 - length($msg));
-	print "$msg$s";
-}
-
-sub print_ans {
-	my ($msg) = @_;
-	if($msg == 0) {
-		print "[  OK  ]\n";
-	} elsif($msg == 1) {
-		print "[ FAIL ]\n";
-	} else {
-		print "[ FAIL ]\nCritical error.\n";
-		exit;
-	}
-}
 
 sub launch { 
 	my ($executable, $options, $in_file, $out_file) = @_;
@@ -167,14 +152,14 @@ sub check_common_tests {
 	@common_tests = sort @common_tests;
 
 	foreach(@common_tests) {
-		print_msg("Checking test ${_}...");
+		labcommon::print_msg("Checking test ${_}...");
 		$result = check_test($executable, $original, "$labtests$_", $options);
-		print_ans($result);
+		labcommon::print_ans($result);
 		if($options & $check_perm) {
-			print_msg("Checking permissions of ${_}...");
+			labcommon::print_msg("Checking permissions of ${_}...");
 			$mode_orig = (stat("$labtests$_"))[2] & 07777;
 			$mode = (stat("exec.out"))[2] & 07777;
-			print_ans($mode_orig == $mode ? 0 : 1);
+			labcommon::print_ans($mode_orig == $mode ? 0 : 1);
 		}
 	}
 }
@@ -184,9 +169,9 @@ sub check_preload {
 	my $result;
 	my $out_exec = "/dev/null";
 	my $test = ($options & $check_cmp_op) ? $preload_test_cmp : $preload_test;
-	print_msg("Checking for read/write...");
+	labcommon::print_msg("Checking for read/write...");
 	$result = launch($executable, $options | $redirect, $test, $out_exec);
-	print_ans(($result > 1) * 2);
+	labcommon::print_ans(($result > 1) * 2);
 }
 
 sub check_several_files {
@@ -201,9 +186,9 @@ sub check_several_files {
     }
 	closedir(DIR);
 	
-	print_msg("Checking several files...(optional)");
+	labcommon::print_msg("Checking several files...(optional)");
 	$result = check_test($executable, $original, join(" ", @common_tests), $options);
-	print_ans($result);
+	labcommon::print_ans($result);
 }
 
 sub check_stdin_input {
@@ -211,20 +196,20 @@ sub check_stdin_input {
 	my $result;
 	
 	if($options & $add_minus) {
-		print_msg("Checking stdin input with - (optional)");
+		labcommon::print_msg("Checking stdin input with - (optional)");
 	} else {
-		print_msg("Checking pipe input without arguments...(optional)");
+		labcommon::print_msg("Checking pipe input without arguments...(optional)");
 	}
 	$result = check_test($executable, $original, "${labtests}3.in" ,$options);
-	print_ans($result);
+	labcommon::print_ans($result);
 }
 
 sub check_flag {
 	my ($executable, $original, $options, $flag) = @_;
 	my $result;
-	print_msg("Checking flag $flag (optional)");
+	labcommon::print_msg("Checking flag $flag (optional)");
 	$result = check_test("$executable $flag", "$original $flag", "${labtests}3.in" ,$options);
-	print_ans($result);
+	labcommon::print_ans($result);
 }
 
 sub check_cat {
@@ -296,25 +281,25 @@ sub check_cmp {
 	my $result;
 	check_preload($executable, $file_input | $redirect | $check_cmp_op);
 
-	print_msg("Checking test 1.in 2.in...");
+	labcommon::print_msg("Checking test 1.in 2.in...");
 	$result = check_test($executable, $original, "${labtests}1.in ${labtests}2.in", $file_input | $redirect);
-	print_ans($result);
+	labcommon::print_ans($result);
 	
-	print_msg("Checking test 5.in 5.in...");
+	labcommon::print_msg("Checking test 5.in 5.in...");
 	$result = check_test($executable, $original, "${labtests}5.in ${labtests}5.in", $file_input | $redirect);
-	print_ans($result);
+	labcommon::print_ans($result);
 	
-	print_msg("Checking test 0.in 0.in...");
+	labcommon::print_msg("Checking test 0.in 0.in...");
 	$result = check_test($executable, $original, "${labtests}0.in ${labtests}0.in", $file_input | $redirect);
-	print_ans($result);
+	labcommon::print_ans($result);
 	
-	print_msg("Checking exitcode...");
+	labcommon::print_msg("Checking exitcode...");
 	$result = 0;
 	
 	$result += launch($executable, $file_input | $redirect, "${labtests}5.in ${labtests}5.in", "/dev/null") == 0 ? 0 : 1;
 	$result += launch($executable, $file_input | $redirect, "${labtests}4.in ${labtests}5.in", "/dev/null") == 1 ? 0 : 1;
 	
-	print_ans($result);
+	labcommon::print_ans($result);
 }
 
 sub check {

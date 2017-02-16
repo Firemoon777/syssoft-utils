@@ -112,4 +112,22 @@ sub analyze {
 	print "\n\n";
 }
 
+sub print_msg {
+	my ($msg) = @_;
+	my $s = " "x(50 - length($msg));
+	print "$msg$s";
+}
+
+sub print_ans {
+	my ($msg) = @_;
+	if($msg == 0) {
+		print "[  OK  ]\n";
+	} elsif($msg == 1) {
+		print "[ FAIL ]\n";
+	} else {
+		print "[ FAIL ]\nCritical error.\n";
+		exit;
+	}
+}
+
 1;
