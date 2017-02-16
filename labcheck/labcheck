@@ -9,18 +9,40 @@ use lab5 qw (check);
 
 my $argc = $#ARGV + 1;
 
-if($argc != 3) {
-	print "Usage: $0 labnum labvar lab\n";
+sub usage {
+	print "Usage: $0 [OPTIONS] labnum labvar projectdir bin [bin]\n";
+	print "Example:\n";
+
 	exit;
 }
 
-print "labnum = $ARGV[0], labvar = $ARGV[1], project dir = $ARGV[2]\n";
+if($argc < 4 || $argc > 5) {
+	usage;
+	exit;
+}
+
+if(!(-d $ARGV[2])) {
+	print "$ARGV[2] must be directory with labwork!\n";
+	exit;
+}
+$ARGV[2] =~ s/\/$//;
+if(!(-f "$ARGV[2]/$ARGV[3]")) {
+	print "$ARGV[2]/$ARGV[3] must be file!\n";
+	exit;
+}
+if($argc == 5 && !(-f "$ARGV[2]/$ARGV[4]")) {
+	print "$ARGV[2]/$ARGV[4] must be file!\n";
+	exit;
+}
 
 if($ARGV[0] == 4) { 
 	labcommon::analyze($ARGV[2]);
 	lab4::check( $ARGV[1], $ARGV[2] );
-} elsif($ARGV[0] == 5) { 
-	lab5::check( $ARGV[1], $ARGV[2] );
+} elsif($ARGV[0] == 5) {
+	if($argc == 4) {
+		$ARGV[4] = "";
+	}
+	lab5::check( $ARGV[1], $ARGV[2], $ARGV[3], $ARGV[4] );
 } elsif($ARGV[0] == 6) { 
 	print "Lab6 checker not implemented!\n";
 } else {
