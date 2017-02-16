@@ -12,6 +12,8 @@ my $argc = $#ARGV + 1;
 sub usage {
 	print "Usage: $0 [OPTIONS] labnum labvar projectdir bin [bin]\n";
 	print "Example:\n";
+	print "\t$0 4 1 . cat\n";
+	print "\t$0 5 1 . task1_server task1_client\n";
 
 	exit;
 }
@@ -42,7 +44,7 @@ if($ARGV[0] == 4) {
 	if($argc == 4) {
 		$ARGV[4] = "";
 	}
-	lab5::check( $ARGV[1], $ARGV[2], $ARGV[3], $ARGV[4] );
+	lab5::check( $ARGV[1], "$ARGV[2]/$ARGV[3]", "$ARGV[2]/$ARGV[4]" );
 } elsif($ARGV[0] == 6) { 
 	print "Lab6 checker not implemented!\n";
 } else {

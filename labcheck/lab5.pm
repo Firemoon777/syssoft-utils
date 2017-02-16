@@ -47,22 +47,41 @@ sub get_truss_output {
 }
 
 sub truss_check_syscall {
-	my ($output, $syscall, $count) = @_;
+	my ($output, $syscall, $min, $max) = @_;
+	my $answer = 0;
+	$max++;
 	labcommon::print_msg("Checking syscall $syscall...");
-	labcommon::print_ans($output =~ /($syscall([\d\D])*){$count,}/ ? 0 : 1);
+	$answer += ($output =~ /($syscall([\d\D])*){$min,}/) ? 0 : 1;
+	$answer += ($output =~ /($syscall([\d\D])*){$max,}/) ? 1 : 0;
+	labcommon::print_ans($answer > 0 ? 1 : 0);
 }
 
 sub check_task1 {
-	my ($executable) = @_;
-	my $truss_output = get_truss_output($executable, $stdbuf, 3);
-	truss_check_syscall($truss_output, "getpid", 1);
-	truss_check_syscall($truss_output, "getuid", 1);
-	truss_check_syscall($truss_output, "getgid", 1);
-	truss_check_syscall($truss_output, "time", 1);
-	truss_check_syscall($truss_output, "getloadavg", 4);
+	my ($server, $client) = @_;
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	print "Checking server side...\n";
+	truss_check_syscall($truss_output, "getpid", 3, 3);
+	truss_check_syscall($truss_output, "getuid", 1, 1);
+	truss_check_syscall($truss_output, "getgid", 1, 1);
+	truss_check_syscall($truss_output, "time", 3, 100);
+	truss_check_syscall($truss_output, "getloadavg", 4, 100);
 
-	truss_check_syscall($truss_output, "shmat", 1);
-	truss_check_syscall($truss_output, "shmget", 1);
+	truss_check_syscall($truss_output, "shmat", 1, 100);
+	truss_check_syscall($truss_output, "shmget", 1, 100);
+
+	print "Checking client side...\n";
+	system(timeout_launch($server, 0, 10) . " &");
+	sleep 1;
+	$truss_output = get_truss_output($client, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 2, 2);
+	truss_check_syscall($truss_output, "getuid", 0, 0);
+	truss_check_syscall($truss_output, "getgid", 0, 0);
+	truss_check_syscall($truss_output, "time", 0, 0);
+	truss_check_syscall($truss_output, "getloadavg", 0, 0);
+
+	truss_check_syscall($truss_output, "shmat", 1, 100);
+	truss_check_syscall($truss_output, "shmget", 1, 100);
+	
 }
 
 sub check_task9 {
@@ -95,11 +114,12 @@ sub check_task9 {
 }
 
 sub check {
-	my ($varnum, $executable) = @_;
+	my ($varnum, $server, $client) = @_;
 	if($varnum == 1) {
-		check_task1($executable);
+		print "Server $server; Client: $client\n";
+		check_task1($server, $client);
 	} elsif($varnum == 9) {
-		check_task9($executable);
+		check_task9($server);
 	} else {
 		print "Checker for variant $varnum not implemented!";
 	}	
