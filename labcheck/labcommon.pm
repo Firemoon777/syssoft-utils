@@ -5,6 +5,8 @@ use warnings;
 
 my $splint = "/export/labs/splint/bin/splint +posixlib";
 my $flags = "-Wall -Werror -Wextra -std=c99";
+my $verbose = 0;
+my $pedantic = 0;
 
 sub check_subdirs {
 	my $projdir = $_[0];
@@ -46,7 +48,8 @@ sub check_make {
 		print "ok.\n";
 		return;
 	}
-	print "fail.\n$output\n";
+	print "fail.\n";
+	print "$output\n" if ($verbose != 0);
 	exit; 
 }
 
@@ -64,14 +67,15 @@ sub check_gcc_flags {
 		if($exitcode == 0) {
 			print "ok.\n";
 		} else {
-			print "fail.\n$output";
+			print "fail.\n";
+			print "$output\n" if ($verbose != 0);
 			$status = 1;
 		}
 		
 		
 	}
 	closedir(DIR);
-	if($status != 0) {
+	if($status != 0 && $pedantic !=0) {
 		exit;
 	}
 }
@@ -90,20 +94,23 @@ sub run_splint {
 		if($exitcode == 0) {
 			print "ok.\n";
 		} else {
-			print "fail.\n$output";
+			print "code warnings found.\n";
+			print "$output\n" if ($verbose != 0);
 			$status = 1;
 		}
 		
 		
 	}
 	closedir(DIR);
-	if($status != 0) {
+	if($status != 0 && $pedantic != 0) {
 		exit;
 	}
 }
 
 sub analyze {
-	my $projdir = $_[0];
+	my ($projdir, $v, $p) = @_;
+	$verbose = $v if defined $v;
+	$pedantic = $p if defined $p;
 	check_subdirs($projdir);
 	check_makefile($projdir);
 	check_make($projdir);

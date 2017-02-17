@@ -8,17 +8,41 @@ use labcommon qw (analyze);
 use lab4 qw (check);
 use lab5 qw (check);
 
-my $argc = $#ARGV + 1;
+my $verbose = 0;
+my $pedantic = 0;
+
 $| = 1;
+
+sub parse_arg {
+	my ($arg) = @_;
+	if($arg =~ /-v/) {
+		$verbose = 1;
+		return 1;
+	} elsif ($arg =~ /-p/) {
+		$pedantic = 1;
+		return 1;
+	}
+
+	return 0;
+}
 
 sub usage {
 	print "Usage: $0 [OPTIONS] labnum labvar projectdir bin [bin]\n";
+	print "Options:\n";
+	print "\t-v    print all make and splint output\n";
+	print "\t-p    all warnings treated as errors\n";
 	print "Example:\n";
 	print "\t$0 4 1 . cat\n";
-	print "\t$0 5 1 . task1_server task1_client\n";
+	print "\t$0 -v 5 1. task1_server task1_client\n";
 
 	exit;
 }
+
+while(parse_arg($ARGV[0]) == 1) {
+	shift @ARGV;
+}
+
+my $argc = $#ARGV + 1;
 
 if($argc < 4 || $argc > 5) {
 	usage;
@@ -38,8 +62,9 @@ if($argc == 5 && !(-f "$ARGV[2]/$ARGV[4]")) {
 	exit;
 }
 
+labcommon::analyze($ARGV[2], $verbose, $pedantic);
+
 if($ARGV[0] == 4) { 
-	labcommon::analyze($ARGV[2]);
 	lab4::check( $ARGV[1], "$ARGV[2]/$ARGV[3]" );
 } elsif($ARGV[0] == 5) {
 	if($argc == 4) {
