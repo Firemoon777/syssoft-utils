@@ -9,6 +9,9 @@ use labcommon qw(print_msg print_ans);
 my $preload_lib = "/home/s207210/syssoft-utils/labcheck/lab5_preload.so";
 my $stdbuf_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/stdbuf";
 my $timeout_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/timeout";
+my $truss_params = "-f -u librt::sem_init,sem_post,sem_wait "; 
+$truss_params .= "-u libsocket::listen,bind,accept ";
+$truss_params .= "-u libnsl:: ";
 
 # Options 
 my $truss   = 1 << 1;
@@ -23,7 +26,7 @@ sub make_query {
 	}
 
 	if($options & $truss) {
-		$cmd .= "truss ";
+		$cmd .= "truss $truss_params";
 	}
 
 	if($options & $stdbuf) {
@@ -43,7 +46,11 @@ sub timeout_launch {
 sub get_truss_output {
 	my ($executable, $options, $timeout) = @_;
 	my $query = "" . timeout_launch($executable, $options | $truss, $timeout) . " 2>&1";
-	return `$query`;
+	my $output = `$query`;
+	# cut truss start 
+	$output =~ s/([\d\D]+?sysi86){2}//;
+	#print "query: $query\noutput: $output\n";
+	return $output;
 }
 
 sub truss_check_syscall {
@@ -58,70 +65,173 @@ sub truss_check_syscall {
 
 sub check_task1 {
 	my ($server, $client) = @_;
-	my $truss_output = get_truss_output($server, $stdbuf, 3);
 	print "Checking server side...\n";
-	truss_check_syscall($truss_output, "getpid", 3, 3);
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
 	truss_check_syscall($truss_output, "getuid", 1, 1);
 	truss_check_syscall($truss_output, "getgid", 1, 1);
 	truss_check_syscall($truss_output, "time", 3, 100);
-	truss_check_syscall($truss_output, "getloadavg", 4, 100);
+	truss_check_syscall($truss_output, "getloadavg", 3, 100);
 
-	truss_check_syscall($truss_output, "shmat", 1, 100);
-	truss_check_syscall($truss_output, "shmget", 1, 100);
+	truss_check_syscall($truss_output, "shmat", 1, 1);
+	truss_check_syscall($truss_output, "shmget", 1, 1);
 
-	print "Checking client side...\n";
+	print "\nChecking client side...\n";
 	system(timeout_launch($server, 0, 10) . " &");
 	sleep 1;
 	$truss_output = get_truss_output($client, $stdbuf, 3);
-	truss_check_syscall($truss_output, "getpid", 2, 2);
+	truss_check_syscall($truss_output, "getpid", 0, 0);
 	truss_check_syscall($truss_output, "getuid", 0, 0);
 	truss_check_syscall($truss_output, "getgid", 0, 0);
 	truss_check_syscall($truss_output, "time", 0, 0);
 	truss_check_syscall($truss_output, "getloadavg", 0, 0);
 
-	truss_check_syscall($truss_output, "shmat", 1, 100);
-	truss_check_syscall($truss_output, "shmget", 1, 100);
+	truss_check_syscall($truss_output, "shmat", 1, 1);
+	truss_check_syscall($truss_output, "shmget", 1, 1);
 	
 }
 
+sub check_task2 {
+	my ($server, $client) = @_;
+	print "Checking server side...\n";
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getuid", 1, 1);
+	truss_check_syscall($truss_output, "getgid", 1, 1);
+	truss_check_syscall($truss_output, "time", 3, 100);
+	truss_check_syscall($truss_output, "getloadavg", 3, 1);
+
+	truss_check_syscall($truss_output, "msgget", 1, 1);
+	truss_check_syscall($truss_output, "msgsnd", 3, 100);
+
+	print "\nChecking client side...\n";
+	system(timeout_launch($server, 0, 10) . " &");
+	sleep 1;
+	$truss_output = get_truss_output($client, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getuid", 0, 0);
+	truss_check_syscall($truss_output, "getgid", 0, 0);
+	truss_check_syscall($truss_output, "time", 0, 0);
+	truss_check_syscall($truss_output, "getloadavg", 0, 0);
+
+	truss_check_syscall($truss_output, "msgget", 1, 1);
+	truss_check_syscall($truss_output, "msgrcv", 1, 1);
+	
+}
+
+sub check_task3 {
+	my ($server, $client) = @_;
+	print "Checking server side...\n";
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getuid", 1, 1);
+	truss_check_syscall($truss_output, "getgid", 1, 1);
+	truss_check_syscall($truss_output, "time", 3, 100);
+	truss_check_syscall($truss_output, "getloadavg", 4, 100);
+	truss_check_syscall($truss_output, "mmap", 1, 1);
+
+	print "\nChecking client side...\n";
+	system(timeout_launch($server, 0, 10) . " &");
+	sleep 1;
+	$truss_output = get_truss_output($client, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 0, 0);
+	truss_check_syscall($truss_output, "getuid", 0, 0);
+	truss_check_syscall($truss_output, "getgid", 0, 0);
+	truss_check_syscall($truss_output, "time", 0, 0);
+	truss_check_syscall($truss_output, "getloadavg", 0, 0);
+	truss_check_syscall($truss_output, "mmap", 1, 1);
+	
+}
+
+sub check_task4 {
+	my ($server) = @_;
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "sem_init", 1, 100);
+	truss_check_syscall($truss_output, "sem_post", 1, 100);
+	truss_check_syscall($truss_output, "sem_wait", 1, 100);
+}
+
+sub check_task5 {
+	my ($server) = @_;
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "semop", 1, 100);
+	truss_check_syscall($truss_output, "semget", 1, 100);
+	truss_check_syscall($truss_output, "semctl", 1, 100);
+}
+
+sub check_task8 {
+	my ($server, $client) = @_;
+	print "Checking server side...\n";
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getuid", 1, 1);
+	truss_check_syscall($truss_output, "getgid", 1, 1);
+	truss_check_syscall($truss_output, "time", 3, 100);
+	truss_check_syscall($truss_output, "getloadavg", 4, 100);
+	truss_check_syscall($truss_output, "socket", 1, 100);
+	truss_check_syscall($truss_output, "bind", 1, 1);
+	truss_check_syscall($truss_output, "libsocket:listen", 2, 2); # truss outputs two listen, first on enter, second on return
+	truss_check_syscall($truss_output, "accept", 1, 10);
+
+	print "\nChecking client side...\n";
+	system(timeout_launch($server, 0, 10) . " &");
+	sleep 1;
+	$truss_output = get_truss_output($client, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 0, 0);
+	truss_check_syscall($truss_output, "getuid", 0, 0);
+	truss_check_syscall($truss_output, "getgid", 0, 0);
+	truss_check_syscall($truss_output, "time", 0, 0);
+	truss_check_syscall($truss_output, "getloadavg", 0, 0);
+	truss_check_syscall($truss_output, "socket", 1, 1);
+	truss_check_syscall($truss_output, "connect", 1, 10);
+	
+}
+
+
 sub check_task9 {
-	my ($executable) = @_;
-	my $pid = fork();
-	if($pid < 0) {
-		print "Failed to fork...";
-		exit(-1);
-	} elsif($pid == 0) {
-		# Child
-		my $output = qx($executable);
-		print "Output: $output\n";
-	} else {
-		# Parent
-		sleep 1;
-		my $file = basename($executable);
-		print "File $file\n";
-		my $whoami = qx(whoami);
-		$pid = qx("pgrep -u $whoami $file");
-		print "Process with pid $pid started!";
-		system("kill -1  $pid");
-		system("kill -2  $pid");
-		system("kill -15 $pid");
-		system("kill -16 $pid");
-		system("kill -17 $pid");
-		system("kill -9  $pid");
+	my ($server) = @_;
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getuid", 1, 1);
+	truss_check_syscall($truss_output, "getgid", 1, 1);
+	truss_check_syscall($truss_output, "time", 3, 100);
+	truss_check_syscall($truss_output, "getloadavg", 4, 100);
 
-	}
+	truss_check_syscall($truss_output, "fork", 1, 100);
+	truss_check_syscall($truss_output, "execl", 1, 100);
+	truss_check_syscall($truss_output, "pipe", 1, 100);
+	truss_check_syscall($truss_output, "dup2", 1, 100);
+}
 
+sub check_task10 {
+	my ($server) = @_;
+	my $truss_output = get_truss_output($server, $stdbuf, 3);
+	truss_check_syscall($truss_output, "fork", 1, 100);
+	truss_check_syscall($truss_output, "exec", 1, 100);
+	truss_check_syscall($truss_output, "pipe", 1, 100);
+	truss_check_syscall($truss_output, "dup2", 1, 100);
 }
 
 sub check {
 	my ($varnum, $server, $client) = @_;
 	if($varnum == 1) {
-		print "Server $server; Client: $client\n";
 		check_task1($server, $client);
+	} elsif($varnum == 2) {
+		check_task2($server, $client);
+	} elsif($varnum == 3) {
+		check_task3($server, $client);
+	} elsif($varnum == 4) {
+		check_task4($server);
+	} elsif($varnum == 5) {
+		check_task5($server);
+	} elsif($varnum == 8) {
+		check_task8($server, $client);
 	} elsif($varnum == 9) {
 		check_task9($server);
+	} elsif($varnum == 10) {
+		check_task10("$server /etc/passwd");
 	} else {
-		print "Checker for variant $varnum not implemented!";
+		print "Checker for variant $varnum not implemented!\n";
 	}	
 }
 

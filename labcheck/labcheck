@@ -8,6 +8,7 @@ use lab4 qw (check);
 use lab5 qw (check);
 
 my $argc = $#ARGV + 1;
+$| = 1;
 
 sub usage {
 	print "Usage: $0 [OPTIONS] labnum labvar projectdir bin [bin]\n";
