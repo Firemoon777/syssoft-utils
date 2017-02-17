@@ -6,9 +6,8 @@ use File::Basename;
 
 use labcommon qw(print_msg print_ans);
 
-my $preload_lib = "/home/s207210/syssoft-utils/labcheck/lab5_preload.so";
-my $stdbuf_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/stdbuf";
-my $timeout_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/timeout";
+my $stdbuf_bin = dirname($0) . "/stdbuf";
+my $timeout_bin = dirname($0) . "/timeout";
 my $truss_params = "-f "; 
 $truss_params .= "-u librt::sem_init,sem_post,sem_wait "; 
 $truss_params .= "-u libsocket::listen,bind,accept ";
@@ -17,15 +16,11 @@ $truss_params .= "-u libc::dup2,execl,system,popen ";
 
 # Options 
 my $truss   = 1 << 1;
-my $preload = 1 << 2;
 my $stdbuf = 1 << 3;
 
 sub make_query {
 	my ($executable, $options) = @_;
 	my $cmd = "";
-	if($options & $preload) {
-		$cmd .= "LD_PRELOAD=$preload_lib ";
-	}
 
 	if($options & $truss) {
 		$cmd .= "truss $truss_params";

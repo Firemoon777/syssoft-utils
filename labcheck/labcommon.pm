@@ -114,7 +114,7 @@ sub analyze {
 
 sub print_msg {
 	my ($msg) = @_;
-	my $s = " "x(50 - length($msg));
+	my $s = " "x(60 - length($msg));
 	print "$msg$s";
 }
 

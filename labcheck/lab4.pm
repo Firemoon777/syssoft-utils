@@ -3,10 +3,12 @@ package lab4;
 use strict;
 use warnings;
 
+use File::Basename;
+
 use labcommon qw(print_msg print_ans);
 
-my $preload = "./lab4_preload.so";
-my $labtests = "./labtests/lab4/";
+my $preload = dirname($0) . "/lab4_preload.so";
+my $labtests = dirname($0) . "/labtests/lab4/";
 my $preload_test = "${labtests}1.in";
 my $preload_test_cmp = "${labtests}1.in ${labtests}0.in";
 
@@ -303,8 +305,7 @@ sub check_cmp {
 }
 
 sub check {
-	my ($varnum, $projdir) = @_;
-	my $executable = "$projdir$var[$varnum]";
+	my ($varnum, $executable) = @_;
 	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
 	if($varnum == 1) {
 		check_cat($executable);
@@ -325,4 +326,3 @@ sub check {
 	}
 }
 
-1
