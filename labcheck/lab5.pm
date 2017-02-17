@@ -9,9 +9,11 @@ use labcommon qw(print_msg print_ans);
 my $preload_lib = "/home/s207210/syssoft-utils/labcheck/lab5_preload.so";
 my $stdbuf_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/stdbuf";
 my $timeout_bin = "/export/home/studs/s207210/tools/coreutils-8.13/src/timeout";
-my $truss_params = "-f -u librt::sem_init,sem_post,sem_wait "; 
+my $truss_params = "-f "; 
+$truss_params .= "-u librt::sem_init,sem_post,sem_wait "; 
 $truss_params .= "-u libsocket::listen,bind,accept ";
-$truss_params .= "-u libnsl:: ";
+$truss_params .= "-u libc::dup2,execl,system,popen ";
+
 
 # Options 
 my $truss   = 1 << 1;
@@ -39,8 +41,9 @@ sub make_query {
 }
 
 sub timeout_launch {
-	my ($executable, $options, $time) = @_;
-	return "$timeout_bin $time " . make_query($executable, $options);
+	my ($executable, $options, $time, $sig) = @_;
+	$sig = "KILL" if !defined $_[3];
+	return "$timeout_bin -s $sig $time " . make_query($executable, $options);
 }
 
 sub get_truss_output {
@@ -49,15 +52,19 @@ sub get_truss_output {
 	my $output = `$query`;
 	# cut truss start 
 	$output =~ s/([\d\D]+?sysi86){2}//;
-	#print "query: $query\noutput: $output\n";
+	# print "query: $query\noutput: $output\n";
 	return $output;
 }
 
 sub truss_check_syscall {
 	my ($output, $syscall, $min, $max) = @_;
 	my $answer = 0;
+	if($min != $max) {
+		labcommon::print_msg("Checking syscall $syscall... required:[$min..$max]");
+	} else {
+		labcommon::print_msg("Checking syscall $syscall... required: $max");
+	}
 	$max++;
-	labcommon::print_msg("Checking syscall $syscall...");
 	$answer += ($output =~ /($syscall([\d\D])*){$min,}/) ? 0 : 1;
 	$answer += ($output =~ /($syscall([\d\D])*){$max,}/) ? 1 : 0;
 	labcommon::print_ans($answer > 0 ? 1 : 0);
@@ -187,6 +194,18 @@ sub check_task8 {
 	
 }
 
+sub check_signal {
+	my ($server, $sig, $value) = @_;
+	my $query;
+	my $output;
+	$query = timeout_launch(timeout_launch($server, 0, 0.5, $sig), $stdbuf, 1, "QUIT");
+	#print "$query\n";
+	labcommon::print_msg("Checking SIG$sig...");
+	$output = `$query`;
+	chomp $output;
+	# print "\n$output == $value\n";
+	labcommon::print_ans((`$query` == $value) ? 0 : 1);
+}
 
 sub check_task9 {
 	my ($server) = @_;
@@ -197,19 +216,21 @@ sub check_task9 {
 	truss_check_syscall($truss_output, "time", 3, 100);
 	truss_check_syscall($truss_output, "getloadavg", 4, 100);
 
-	truss_check_syscall($truss_output, "fork", 1, 100);
-	truss_check_syscall($truss_output, "execl", 1, 100);
-	truss_check_syscall($truss_output, "pipe", 1, 100);
-	truss_check_syscall($truss_output, "dup2", 1, 100);
+	truss_check_syscall($truss_output, "sigaction", 1, 100);
+
+	check_signal($server, "INT", $<);
+	check_signal($server, "TERM", split(' ', $());
 }
 
 sub check_task10 {
 	my ($server) = @_;
 	my $truss_output = get_truss_output($server, $stdbuf, 3);
 	truss_check_syscall($truss_output, "fork", 1, 100);
-	truss_check_syscall($truss_output, "exec", 1, 100);
-	truss_check_syscall($truss_output, "pipe", 1, 100);
-	truss_check_syscall($truss_output, "dup2", 1, 100);
+	truss_check_syscall($truss_output, "execl", 1, 100);
+	truss_check_syscall($truss_output, "pipe", 1, 2);
+	truss_check_syscall($truss_output, "dup2", 2, 2);
+	truss_check_syscall($truss_output, "system", 0, 0);
+	truss_check_syscall($truss_output, "popen", 0, 0);
 }
 
 sub check {
