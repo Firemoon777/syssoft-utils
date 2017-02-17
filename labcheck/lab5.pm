@@ -100,8 +100,8 @@ sub check_task2 {
 	truss_check_syscall($truss_output, "getpid", 1, 1);
 	truss_check_syscall($truss_output, "getuid", 1, 1);
 	truss_check_syscall($truss_output, "getgid", 1, 1);
-	truss_check_syscall($truss_output, "time", 3, 100);
-	truss_check_syscall($truss_output, "getloadavg", 3, 1);
+	truss_check_syscall($truss_output, "time", 3, 5);
+	truss_check_syscall($truss_output, "getloadavg", 3, 5);
 
 	truss_check_syscall($truss_output, "msgget", 1, 1);
 	truss_check_syscall($truss_output, "msgsnd", 3, 100);
@@ -110,7 +110,7 @@ sub check_task2 {
 	system(timeout_launch($server, 0, 10) . " &");
 	sleep 1;
 	$truss_output = get_truss_output($client, $stdbuf, 3);
-	truss_check_syscall($truss_output, "getpid", 1, 1);
+	truss_check_syscall($truss_output, "getpid", 0, 0);
 	truss_check_syscall($truss_output, "getuid", 0, 0);
 	truss_check_syscall($truss_output, "getgid", 0, 0);
 	truss_check_syscall($truss_output, "time", 0, 0);
@@ -148,17 +148,17 @@ sub check_task3 {
 sub check_task4 {
 	my ($server) = @_;
 	my $truss_output = get_truss_output($server, $stdbuf, 3);
-	truss_check_syscall($truss_output, "sem_init", 1, 100);
-	truss_check_syscall($truss_output, "sem_post", 1, 100);
-	truss_check_syscall($truss_output, "sem_wait", 1, 100);
+	truss_check_syscall($truss_output, "sem_init", 1, 10);
+	truss_check_syscall($truss_output, "sem_post", 1, 20);
+	truss_check_syscall($truss_output, "sem_wait", 1, 20);
 }
 
 sub check_task5 {
 	my ($server) = @_;
 	my $truss_output = get_truss_output($server, $stdbuf, 3);
-	truss_check_syscall($truss_output, "semop", 1, 100);
-	truss_check_syscall($truss_output, "semget", 1, 100);
-	truss_check_syscall($truss_output, "semctl", 1, 100);
+	truss_check_syscall($truss_output, "semop", 1, 20);
+	truss_check_syscall($truss_output, "semget", 1, 20);
+	truss_check_syscall($truss_output, "semctl", 1, 20);
 }
 
 sub check_task8 {
@@ -169,7 +169,7 @@ sub check_task8 {
 	truss_check_syscall($truss_output, "getuid", 1, 1);
 	truss_check_syscall($truss_output, "getgid", 1, 1);
 	truss_check_syscall($truss_output, "time", 3, 100);
-	truss_check_syscall($truss_output, "getloadavg", 4, 100);
+	truss_check_syscall($truss_output, "getloadavg", 4, 5);
 	truss_check_syscall($truss_output, "socket", 1, 100);
 	truss_check_syscall($truss_output, "bind", 1, 1);
 	truss_check_syscall($truss_output, "libsocket:listen", 2, 2); # truss outputs two listen, first on enter, second on return
@@ -208,10 +208,10 @@ sub check_task9 {
 	truss_check_syscall($truss_output, "getpid", 1, 1);
 	truss_check_syscall($truss_output, "getuid", 1, 1);
 	truss_check_syscall($truss_output, "getgid", 1, 1);
-	truss_check_syscall($truss_output, "time", 3, 100);
-	truss_check_syscall($truss_output, "getloadavg", 4, 100);
+	truss_check_syscall($truss_output, "time", 3, 5);
+	truss_check_syscall($truss_output, "getloadavg", 3, 5);
 
-	truss_check_syscall($truss_output, "sigaction", 1, 100);
+	truss_check_syscall($truss_output, "sigaction", 1, 10);
 
 	check_signal($server, "INT", $<);
 	check_signal($server, "TERM", split(' ', $());
@@ -220,8 +220,8 @@ sub check_task9 {
 sub check_task10 {
 	my ($server) = @_;
 	my $truss_output = get_truss_output($server, $stdbuf, 3);
-	truss_check_syscall($truss_output, "fork", 1, 100);
-	truss_check_syscall($truss_output, "execl", 1, 100);
+	truss_check_syscall($truss_output, "fork", 1, 2);
+	truss_check_syscall($truss_output, "execl", 1, 1);
 	truss_check_syscall($truss_output, "pipe", 1, 2);
 	truss_check_syscall($truss_output, "dup2", 2, 2);
 	truss_check_syscall($truss_output, "system", 0, 0);
