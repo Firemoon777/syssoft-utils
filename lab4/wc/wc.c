@@ -43,7 +43,7 @@ static void print_ans(size_t l, size_t w, size_t b, const char* name) {
 	(void)write(STDOUT_FILENO, output, strlen(output));
 }
 
-static void do_task(const char* filename, size_t* tl, size_t* tw, size_t* tb) {
+static int do_task(const char* filename, size_t* tl, size_t* tw, size_t* tb) {
 	char buff[BUFFER_SIZE];
 	ssize_t j, buff_readed;
 	size_t b = 0, w = 0, l = 0;
@@ -55,7 +55,7 @@ static void do_task(const char* filename, size_t* tl, size_t* tw, size_t* tb) {
 	}
 	if(fd < 0) {
 		perror(filename);	
-		return;
+		return 1;
 	}
 	while((buff_readed = read(fd, buff, BUFFER_SIZE)) > 0) {
 		b += buff_readed;
@@ -74,26 +74,28 @@ static void do_task(const char* filename, size_t* tl, size_t* tw, size_t* tb) {
 	}
 	if(buff_readed < 0) {
 		perror(filename);
-		return;
+		return 1;
 	}
 	*tb += b;
 	*tw += w;
 	*tl += l;
 	print_ans(l, w, b, filename);
 	(void)close(fd);
+	return 0;
 }
 
 int main(int argc, char** argv) {
 	int i = 1;
+	int exitcode = EXIT_SUCCESS;
 	size_t tb = 0, tw = 0, tl = 0;;
 	if(argc == 1) {
 		do_task("-", &tl, &tw, &tb);
 	}
 	for(i = 1; i < argc; i++) {
-		do_task(argv[i], &tl, &tw, &tb);
+		exitcode += do_task(argv[i], &tl, &tw, &tb);
 	}
 	if(argc > 2) {
 		print_ans(tl, tw, tb, "total");
 	}
-	return 0;
+	return exitcode;
 }
