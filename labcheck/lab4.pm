@@ -66,14 +66,16 @@ sub launch {
 	if($options & $add_minus) {
 		$cmd .= "- ";
 	}
-	if($options & $trim_whitespaces) {
-		$cmd .= " | sed -e 's/  */ /g; s/^ //g' ";
+	if($in_file !~ m/.*\.err/) {
+		if($options & $trim_whitespaces) {
+			$cmd .= " | sed -e 's/  */ /g; s/^ //g' ";
+		}
 	}
 	if($options & $redirect) {
 		$cmd .= "> ";
 	}
 	$cmd .= "$out_file ";
-	$cmd .= " 2>&1";
+	$cmd .= " 2>/dev/null";
 	
 	#print "cmd: $cmd\n";
 	system($cmd);
@@ -121,10 +123,13 @@ sub check_test {
 	
 	my $out_exec = "exec.out";
 	my $out_orig = "orig.out";
-	my $exit_code;
+	my $exitcode = launch($executable, $options, $test_file, $out_exec);
 	
-	if(launch($executable, $options, $test_file, $out_exec) == $preload_exitcode) {
+	if($exitcode == $preload_exitcode) {
 		return 2;
+	}
+	if($test_file =~ m/.*\.err/) {
+		return $exitcode != 0 ? 0 : 1;
 	}
 	if(($options & $check_in_out) == 0) {
 		launch($original, $options | $disable_preload, $test_file, $out_orig);
@@ -184,6 +189,7 @@ sub check_several_files {
 	opendir(DIR, $labtests) or die $!;
 	while (my $file = readdir(DIR)) {	
 		next if ($file =~ m/^\./);
+		next if ($file =~ m/.*err/);
         push @common_tests, "$labtests$file";
     }
 	closedir(DIR);

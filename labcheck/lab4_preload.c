@@ -27,10 +27,24 @@ int dprintf(int fd, const char *format, ...) {
 	_exit(EXITCODE);
 }
 
-int sprintf(char *str, const char *format, ...) {
+int puts(const char *s) {
 	_exit(EXITCODE);
 }
 
-int snprintf(char *str, size_t size, const char *format, ...) {
+size_t fread(void *ptr, size_t  size,  size_t  nitems,  FILE *stream) {
+	_exit(EXITCODE);
+}
+
+FILE *fopen(const char *filename, const char *mode) {
+	_exit(EXITCODE);
+}
+
+int fclose(FILE *stream) {
+	_exit(EXITCODE);
+}
+
+/*perror*/
+
+size_t fwrite(const void *ptr, size_t size,  size_t  nitems, FILE *stream) {
 	_exit(EXITCODE);
 }
