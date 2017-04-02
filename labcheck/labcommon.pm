@@ -50,7 +50,7 @@ sub check_make {
 	}
 	print "fail.\n";
 	print "$output\n" if ($verbose != 0);
-	exit; 
+	exit if $pedantic; 
 }
 
 sub check_gcc_flags {
