@@ -33,7 +33,7 @@ sub usage {
 	print "\t-p    all warnings treated as errors\n";
 	print "Example:\n";
 	print "\t$0 4 1 . cat\n";
-	print "\t$0 -v 5 1. task1_server task1_client\n";
+	print "\t$0 -v 5 1 . task1_server task1_client\n";
 
 	exit;
 }
