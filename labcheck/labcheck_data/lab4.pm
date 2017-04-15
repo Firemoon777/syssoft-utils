@@ -48,6 +48,7 @@ my $several_output   = 1 << 8;
 my $check_cmp_op     = 1 << 9;
 my $add_minus        = 1 << 10;
 my $check_perm       = 1 << 11;
+my $stdin_input      = 1 << 12;
 
 
 sub launch { 
@@ -84,6 +85,10 @@ sub launch {
 	$cmd .= "$out_file ";
 	$cmd .= " 2>/dev/null";
 	
+	if($options & $stdin_input) {
+		$cmd .= "< $in_file ";
+	}
+
 	#print "cmd: $cmd\n";
 	system($cmd);
 	my $e = $? >> 8;
@@ -265,10 +270,10 @@ sub check_tee {
 	my $executable = $_[0];
 	my $original = "tee";
 	
-	check_preload($executable, $pipe_input | $redirect);
-	check_common_tests($executable, $original, $pipe_input | $remove_out | $check_tee_op);
-	check_several_files($executable, $original, $pipe_input | $several_output | $check_tee_op);
-	check_stdin_input($executable, $original, $pipe_input | $redirect);
+	check_preload($executable, $stdin_input | $redirect);
+	check_common_tests($executable, $original, $stdin_input | $remove_out | $check_tee_op);
+	check_several_files($executable, $original, $stdin_input | $several_output | $check_tee_op);
+	check_stdin_input($executable, $original, $stdin_input | $redirect);
 }
 
 sub check_wc {
