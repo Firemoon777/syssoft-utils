@@ -313,7 +313,15 @@ sub check_cmp {
 
 sub check {
 	my ($varnum, $executable) = @_;
-	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\n\n\n";
+	my $arch = `file $executable`;
+	if($arch =~ m/32-bit/) {
+		$arch = "32-bit";
+	} elsif ($arch =~ m/64-bit/) {
+		$arch = "64-bit";
+	} else {
+		$arch = "Unknown";
+	}
+	print "Lab num: 4\nLab variant: $varnum -- $var[$varnum]\nExecutable: $executable\nArch: $arch\n\n\n";
 	if($varnum == 1) {
 		check_cat($executable);
 	} elsif($varnum == 2) {
