@@ -1,4 +1,4 @@
-#!/usr/bin/perl -I/home/s207210/syssoft-utils/labcheck
+#!/usr/bin/perl -I/home/s207210/syssoft-utils/labcheck/labcheck_data
 
 use strict;
 use v5.8.4;
@@ -52,6 +52,9 @@ if(!(-d $ARGV[2])) {
 	print "$ARGV[2] must be directory with labwork!\n";
 	exit;
 }
+
+labcommon::analyze($ARGV[2], $verbose, $pedantic);
+
 $ARGV[2] =~ s/\/$//;
 if(!(-f "$ARGV[2]/$ARGV[3]")) {
 	print "$ARGV[2]/$ARGV[3] must be file!\n";
@@ -61,8 +64,6 @@ if($argc == 5 && !(-f "$ARGV[2]/$ARGV[4]")) {
 	print "$ARGV[2]/$ARGV[4] must be file!\n";
 	exit;
 }
-
-labcommon::analyze($ARGV[2], $verbose, $pedantic);
 
 if($ARGV[0] == 4) { 
 	lab4::check( $ARGV[1], "$ARGV[2]/$ARGV[3]" );
