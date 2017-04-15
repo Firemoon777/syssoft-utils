@@ -118,10 +118,24 @@ sub run_splint {
 	}
 }
 
+sub print_logo {
+	print "
+ _       _          _               _    
+| |     | |        | |             | |   
+| | __ _| |__   ___| |__   ___  ___| | __
+| |/ _` | '_ \\ / __| '_ \\ / _ \\/ __| |/ /
+| | (_| | |_) | (__| | | |  __/ (__|   < 
+|_|\\__,_|_.__/ \\___|_| |_|\\___|\\___|_|\\_\\
+";
+}
+
 sub analyze {
 	my ($projdir, $v, $p) = @_;
 	$verbose = $v if defined $v;
 	$pedantic = $p if defined $p;
+
+	print_logo();
+
 	check_subdirs($projdir);
 	check_makefile($projdir);
 	check_make($projdir);

@@ -169,6 +169,9 @@ sub check_common_tests {
 		labcommon::print_msg("Checking test ${_}...");
 		$result = check_test($executable, $original, "$labtests$_", $options);
 		labcommon::print_ans($result);
+		if($_ =~ m/.*\.err/) {
+			next;
+		}
 		if($options & $check_perm) {
 			labcommon::print_msg("Checking permissions of ${_}...");
 			$mode_orig = (stat("$labtests$_"))[2] & 07777;
