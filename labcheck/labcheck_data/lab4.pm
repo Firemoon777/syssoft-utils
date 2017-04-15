@@ -86,7 +86,11 @@ sub launch {
 	$cmd .= " 2>/dev/null";
 	
 	if($options & $stdin_input) {
-		$cmd .= "< $in_file ";
+		if(-r $in_file) {
+			$cmd .= "< $in_file ";
+		} else {
+			return 666;
+		}
 	}
 
 	#print "cmd: $cmd\n";
@@ -101,15 +105,24 @@ sub check_test_tee {
 	
 	my $stdout = "std.out";
 	my $out = "exec.out";
-	my $result;
+	my $result = 0;
+	my $exitcode;
 	
 	if($options & $several_output) {
 		$out .= " ex.out";
 	}
 	system("rm -f $out $stdout");
 	
-	if(launch($executable, $options, $test_file, "$out > $stdout")) {
-		return 1;
+	$exitcode = launch($executable, $options, $test_file, "$out > $stdout");
+	if($exitcode == 666) {
+		return -1;
+	}
+	if($exitcode != 0) {
+		if($test_file =~ m/.*\.err/) {
+			return 0;
+		} else {
+			return 1;
+		}
 	}
 	
 	if($options & $several_output) {
@@ -272,7 +285,7 @@ sub check_tee {
 	
 	check_preload($executable, $stdin_input | $redirect);
 	check_common_tests($executable, $original, $stdin_input | $remove_out | $check_tee_op);
-	check_several_files($executable, $original, $stdin_input | $several_output | $check_tee_op);
+	#check_several_files($executable, $original, $stdin_input | $several_output | $check_tee_op);
 	check_stdin_input($executable, $original, $stdin_input | $redirect);
 }
 

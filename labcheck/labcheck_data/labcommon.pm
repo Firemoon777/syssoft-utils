@@ -51,16 +51,6 @@ sub check_make {
 	print "fail.\n";
 	print "$output\n" if ($verbose != 0);
 
-	print "Trying to build with gmake...";
-	$output = qx(cd $projdir && make 2>&1);
-	$exitcode = $? >> 8;
-	if($exitcode == 0) {
-		print "ok.\n";
-		return;
-	}
-	print "fail.\n";
-	print "$output\n" if ($verbose != 0);
-
 	exit if $pedantic; 
 }
 
@@ -152,7 +142,9 @@ sub print_msg {
 
 sub print_ans {
 	my ($msg) = @_;
-	if($msg == 0) {
+	if($msg == -1) {
+		print "[ SKIP ]\n";
+	} elsif($msg == 0) {
 		print "[  OK  ]\n";
 	} elsif($msg == 1) {
 		print "[ FAIL ]\n";

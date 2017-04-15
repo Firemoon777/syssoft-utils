@@ -6,8 +6,9 @@ use File::Basename;
 
 use labcommon qw(print_msg print_ans);
 
-my $stdbuf_bin = dirname($0) . "/stdbuf";
-my $timeout_bin = dirname($0) . "/timeout";
+my $data_dir = dirname($0) . "/labcheck_data";
+my $stdbuf_bin = $data_dir . "/stdbuf";
+my $timeout_bin = $data_dir . "/timeout";
 my $truss_params = "-f "; 
 $truss_params .= "-u librt::sem_init,sem_post,sem_wait "; 
 $truss_params .= "-u libsocket::listen,bind,accept ";
@@ -37,7 +38,7 @@ sub make_query {
 
 sub timeout_launch {
 	my ($executable, $options, $time, $sig) = @_;
-	$sig = "KILL" if !defined $_[3];
+	$sig = "INT" if !defined $_[3];
 	return "$timeout_bin -s $sig $time " . make_query($executable, $options);
 }
 
@@ -230,6 +231,8 @@ sub check_task10 {
 
 sub check {
 	my ($varnum, $server, $client) = @_;
+	my $username = getpwuid( $< );
+	my $start = () = `ipcs` =~ /$username/g;
 	if($varnum == 1) {
 		check_task1($server, $client);
 	} elsif($varnum == 2) {
@@ -248,7 +251,10 @@ sub check {
 		check_task10("$server /etc/passwd");
 	} else {
 		print "Checker for variant $varnum not implemented!\n";
+		return;
 	}	
+	my $finish = () = `ipcs` =~ /$username/g;
+	print "Start: $start\nFinish: $finish\n";
 }
 
 1;
