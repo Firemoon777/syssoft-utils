@@ -232,7 +232,7 @@ sub check_task10 {
 sub check {
 	my ($varnum, $server, $client) = @_;
 	my $username = getpwuid( $< );
-	my $start = () = `ipcs` =~ /$username/g;
+	my $number;
 	if($varnum == 1) {
 		check_task1($server, $client);
 	} elsif($varnum == 2) {
@@ -253,8 +253,15 @@ sub check {
 		print "Checker for variant $varnum not implemented!\n";
 		return;
 	}	
-	my $finish = () = `ipcs` =~ /$username/g;
-	print "Start: $start\nFinish: $finish\n";
+	if(($number = () = `ipcs -m` =~ /$username/g)) {
+		print "\nWarning: Detected shm segments\n";
+	}
+	if(($number = () = `ipcs -q` =~ /$username/g)) {
+		print "\nWarning: Detected message queue\n";
+	}
+	if(($number = () = `ipcs -s` =~ /$username/g)) {
+		print "\nWarning: Detected semaphores\n";
+	}
 }
 
 1;
