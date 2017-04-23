@@ -83,7 +83,7 @@ sub launch {
 		$cmd .= "> ";
 	}
 	$cmd .= "$out_file ";
-	$cmd .= " 2>/dev/null";
+	$cmd .= " 2>&1";
 	
 	if($options & $stdin_input) {
 		if(-r $in_file) {
@@ -153,7 +153,7 @@ sub check_test {
 	if($exitcode == $preload_exitcode) {
 		return 2;
 	}
-	if($test_file =~ m/.*\.err/) {
+	if(($test_file =~ m/.*\.err/)) {
 		return $exitcode != 0 ? 0 : 1;
 	}
 	if(($options & $check_in_out) == 0) {
@@ -309,17 +309,25 @@ sub check_cmp {
 	check_preload($executable, $file_input | $redirect | $check_cmp_op);
 
 	labcommon::print_msg("Checking test 1.in 2.in...");
-	$result = check_test($executable, $original, "${labtests}1.in ${labtests}2.in", $file_input | $redirect);
+	$result = check_test($executable, $original, "${labtests}1.in ${labtests}2.in", $file_input | $redirect | $check_cmp_op);
+	labcommon::print_ans($result);
+	
+	labcommon::print_msg("Checking test 2.in 1.in...");
+	$result = check_test($executable, $original, "${labtests}2.in ${labtests}1.in", $file_input | $redirect | $check_cmp_op);
 	labcommon::print_ans($result);
 	
 	labcommon::print_msg("Checking test 5.in 5.in...");
-	$result = check_test($executable, $original, "${labtests}5.in ${labtests}5.in", $file_input | $redirect);
+	$result = check_test($executable, $original, "${labtests}5.in ${labtests}5.in", $file_input | $redirect | $check_cmp_op);
 	labcommon::print_ans($result);
-	
+
 	labcommon::print_msg("Checking test 0.in 0.in...");
-	$result = check_test($executable, $original, "${labtests}0.in ${labtests}0.in", $file_input | $redirect);
+	$result = check_test($executable, $original, "${labtests}0.in ${labtests}0.in", $file_input | $redirect | $check_cmp_op);
 	labcommon::print_ans($result);
-	
+
+	labcommon::print_msg("Checking test 7.err 7.err...");
+	$result = check_test($executable, $original, "${labtests}7.err ${labtests}7.err", $file_input | $redirect | $check_cmp_op);
+	labcommon::print_ans($result);
+
 	labcommon::print_msg("Checking exitcode...");
 	$result = 0;
 	
