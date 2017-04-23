@@ -41,8 +41,14 @@ sub check_makefile {
 
 sub check_make {
 	my $projdir = $_[0];
-	print "Cheсking build with make...";
-	my $output = qx(cd $projdir && make 2>&1);
+	my $MAKE;
+	if(defined $ENV{MAKE}) {
+		$MAKE = "gmake";
+	} else {
+		$MAKE = "make";
+	}
+	print "Cheсking build with $MAKE...";
+	my $output = qx(cd $projdir && $MAKE 2>&1);
 	my $exitcode = $? >> 8;
 	if($exitcode == 0) {
 		print "ok.\n";
