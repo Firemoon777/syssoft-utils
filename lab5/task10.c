@@ -11,8 +11,8 @@
 int main(int argc, char** argv) {
 	int fd[2];
 	int file;
-	char buff[2*BUFFER_SIZE], out[BUFFER_SIZE];
-	ssize_t buff_readed, i;
+	char buff[2*(BUFFER_SIZE+1)], out[BUFFER_SIZE];
+	ssize_t buff_readed, i, j, flag = 0;
 	if(argc != 2) {
 		fprintf(stderr, "Usage: %s file\n", argv[0]);
 		return -1;
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 			dup2(fd[1], STDIN_FILENO);
 			/* */
 			/* Start wc */
-			execl("/usr/bin/wc", "wc", (char*)0);
+			execl("/usr/bin/cat", "wc", (char*)0);
 			break;
 
 		default:
@@ -46,11 +46,12 @@ int main(int argc, char** argv) {
 				perror(argv[1]);
 				return -2;
 			}
-			while((buff_readed = read(file, buff, 2*BUFFER_SIZE)) > 0) {
-				for(i = 0; i < (buff_readed + 1) / 2; i++) {
-					out[i] = buff[2*i];
+			while((buff_readed = read(file, buff, BUFFER_SIZE)) > 0) {
+				for(i = flag, j = 0; i < buff_readed; i += 2, j++) {
+					out[j] = buff[i];
 				}	
-				write(fd[0], out, (size_t)i);
+				write(fd[0], out, j);
+				flag = (buff_readed % 2 == 0) ? 0 : 1;
 			}
 			if(buff_readed < 0) {
 				perror("read");
