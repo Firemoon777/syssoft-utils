@@ -21,7 +21,7 @@ struct server_info save_info(void) {
 	info.uid = getuid();
 	info.gid = getgid();
 	info.diff = 0;
-	assert(getloadavg(info.loadavg, AVG_ELEMENTS));
+	assert(getloadavg(info.loadavg, LOADAVG_NSTATS));
 	return info;	
 }
 
@@ -68,7 +68,7 @@ int main(void) {
 		assert(cur_time > 0);
 
 		srv_info.diff = cur_time - start_time;
-		assert(getloadavg(srv_info.loadavg, AVG_ELEMENTS));
+		assert(getloadavg(srv_info.loadavg, LOADAVG_NSTATS));
 		if((cl = accept(fd, NULL, NULL)) != -1) {
 			write(cl, &srv_info, sizeof(srv_info));
 		}

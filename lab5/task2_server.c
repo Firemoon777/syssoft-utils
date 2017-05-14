@@ -9,9 +9,19 @@
 #include <time.h>
 #include <sys/loadavg.h>  /* getloadavg */
 #include <string.h>       /* memset */
+#include <signal.h>
+#include <stdlib.h>
 
 #include "task.h"
 
+int msg_id;
+struct msg msg;
+
+void sighandler(int signo) {
+	(void)signo;
+	msgctl(msg_id, IPC_RMID, NULL);	
+	_exit(0);	
+}
 
 struct server_info save_info(void) {
 	struct server_info info;
@@ -19,22 +29,23 @@ struct server_info save_info(void) {
 	info.uid = getuid();
 	info.gid = getgid();
 	info.diff = 0;
-	assert(getloadavg(info.loadavg, AVG_ELEMENTS));
+	assert(getloadavg(info.loadavg, LOADAVG_NSTATS));
 	return info;	
 }
 
 int main(void) {
-	struct msg msg;
 	time_t start_time = time(NULL);
 
 	time_t cur_time;
 	key_t key;
-    int msg_id;
 
-	/* create ipc file */
-	close(open(name, O_RDWR | O_CREAT, 0644));
+	struct sigaction act;
+	memset(&act, 0, sizeof(struct sigaction));
+	act.sa_handler = sighandler;
+	sigaction(SIGINT, &act, NULL);
+
 	/* generate ipc key */
-	key = ftok(name, id);
+	key = KEY;
 
 	/* setup message queue */
 	msg_id = msgget(key, IPC_CREAT | 0666);
@@ -46,7 +57,7 @@ int main(void) {
 		assert(cur_time > 0);
 
 		msg.info.diff = cur_time - start_time;
-		assert(getloadavg(msg.info.loadavg, AVG_ELEMENTS));
+		assert(getloadavg(msg.info.loadavg, LOADAVG_NSTATS));
 		msgsnd(msg_id, &msg, sizeof(msg), 0);
 		sleep(1);
 	}

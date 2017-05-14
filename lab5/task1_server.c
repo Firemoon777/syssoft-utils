@@ -10,15 +10,18 @@
 #include <sys/loadavg.h>  /* getloadavg */
 #include <string.h>       /* memset */
 #include <signal.h>
+#include <stdlib.h>
 
 #include "task.h"
 
 key_t key;
 int mem_id;
+struct server_info *info;
 
 void sighandler(int signo) {
 	(void)signo;
 	shmctl(mem_id, IPC_RMID, NULL);	
+	free(info);
 	_exit(0);	
 }
 
@@ -28,12 +31,11 @@ struct server_info save_info(void) {
 	info.uid = getuid();
 	info.gid = getgid();
 	info.diff = 0;
-	assert(getloadavg(info.loadavg, AVG_ELEMENTS));
+	assert(getloadavg(info.loadavg, LOADAVG_NSTATS));
 	return info;	
 }
 
 int main(void) {
-	struct server_info *info;
 	time_t start_time = time(NULL);
 
 	time_t cur_time;
@@ -43,10 +45,8 @@ int main(void) {
 	act.sa_handler = sighandler;
 	sigaction(SIGINT, &act, NULL);
 
-	/* create ipc file */
-	close(open(name, O_RDWR | O_CREAT, 0644));
 	/* generate ipc key */
-	key = ftok(name, id);
+	key = KEY;
 
 	/* setup */
 	mem_id = shmget(key, sizeof(info), IPC_CREAT | 0644);
@@ -61,7 +61,7 @@ int main(void) {
 		assert(cur_time > 0);
 
 		info->diff = cur_time - start_time;
-		assert(getloadavg(info->loadavg, AVG_ELEMENTS));
+		assert(getloadavg(info->loadavg, LOADAVG_NSTATS));
 		sleep(1);
 	}
 

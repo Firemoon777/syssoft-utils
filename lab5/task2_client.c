@@ -18,7 +18,7 @@ int main(void) {
 	int msg_id;
 
 	/* generate ipc key */
-	key = ftok(name, id);
+	key = KEY;
 
 	/* setup message queue */
 	msg_id = msgget(key, IPC_CREAT | 0666);

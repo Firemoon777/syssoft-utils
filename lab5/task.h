@@ -19,4 +19,6 @@ struct msg {
 	struct server_info info;
 };
 
+#define KEY 666
+
 #endif

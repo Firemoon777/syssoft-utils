@@ -18,7 +18,7 @@ int main(void) {
 	int mem_id;
 
 	/* generate ipc key */
-	key = ftok(name, id);
+	key = KEY;
 
 	/* setup message queue */
 	mem_id = shmget(key, sizeof(info), 0);

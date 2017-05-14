@@ -5,12 +5,14 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "task.h"
+
 #define ENG 26
 #define THREADS 2
 char alpha[ENG] = "abcdefghijklmnopqrstuvwxyz";
 
 pthread_t t[THREADS];
-key_t key = 123;
+key_t key = KEY;
 int semid;
 
 void print_alpha(void) {
@@ -54,12 +56,11 @@ void* chcase(void* d) {
 
 int sem_init[] = {0, 0, 0};
 
-int main(int argc, char** argv) {
-	(void)argc;
+int main(void) {
 	struct sembuf buf = {0, 1, SEM_UNDO};
 	struct sembuf sem_print = {2, -1, SEM_UNDO};
-	/* get key based on program file */
-	key = ftok(argv[0], 's');
+
+	key = KEY;
 	/* Create 3 semaphores and get their id*/
 	semid = semget(key, 3, IPC_CREAT | 0600);
 	/* Init all semaphores */
