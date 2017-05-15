@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 			dup2(fd[1], STDIN_FILENO);
 			/* */
 			/* Start wc */
-			execl("/usr/bin/cat", "wc", (char*)0);
+			execl("/usr/bin/wc", "wc", (char*)0);
 			break;
 
 		default:

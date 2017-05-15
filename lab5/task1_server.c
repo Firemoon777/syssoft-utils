@@ -50,9 +50,16 @@ int main(void) {
 
 	/* setup */
 	mem_id = shmget(key, sizeof(info), IPC_CREAT | 0644);
-
+	if(mem_id < 0) {
+		perror("shmget");
+		return 1;
+	}
 	/* attach memory */
 	info = (struct server_info*)shmat(mem_id, NULL, 0);
+	if(info == NULL) {
+		perror("shmat");
+		return 1;
+	}
 
 	*info = save_info();
 

@@ -49,16 +49,26 @@ int main(void) {
 
 	/* setup message queue */
 	msg_id = msgget(key, IPC_CREAT | 0666);
+	if(msg_id < 0) {
+		perror("msgget");
+		return 1;
+	}
 
 	msg.info = save_info();
+	msg.type = 1;
 
 	while(1) {
 		cur_time = time(NULL);
 		assert(cur_time > 0);
 
+		msg.type++;
 		msg.info.diff = cur_time - start_time;
 		assert(getloadavg(msg.info.loadavg, LOADAVG_NSTATS));
-		msgsnd(msg_id, &msg, sizeof(msg), 0);
+		if(msgsnd(msg_id, &msg, sizeof(msg), 0) < 0) {
+			perror("msgsnd");
+		}
+
+
 		sleep(1);
 	}
 

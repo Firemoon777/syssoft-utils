@@ -22,9 +22,16 @@ int main(void) {
 
 	/* setup message queue */
 	msg_id = msgget(key, IPC_CREAT | 0666);
+	if(msg_id < 0) {
+		perror("msgget");
+		return 1;
+	}
 	
 	/* Get msg */
-	msgrcv(msg_id, &msg, sizeof(msg), 0, 0);
+	if(msgrcv(msg_id, &msg, sizeof(msg), 0, 0 < 0) < 0) {
+		perror("msgrcv");
+		return 1;
+	}
 
 	printf("%li\n%li\n%li\n", (long)msg.info.pid, (long)msg.info.uid, (long)msg.info.gid);
 	printf("%li\n", (long)msg.info.diff);
